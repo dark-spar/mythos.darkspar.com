@@ -1,0 +1,29 @@
+<footer class="site-footer">
+  <div class="container site-footer__row">
+    <div class="site-footer__brand">
+      {{ partial "logo.html" . }}
+      <p class="site-footer__tagline">{{ site.Params.tagline }}</p>
+    </div>
+    <nav class="site-footer__nav" aria-label="Footer">
+      <div class="site-footer__col">
+        <h4>Mythos</h4>
+        <ul>
+          <li><a href="{{ "/docs/" | relURL }}">Documentation</a></li>
+          <li><a href="{{ "/download/" | relURL }}">Download</a></li>
+          <li><a href="{{ "/blog/" | relURL }}">Blog</a></li>
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <h4>Project</h4>
+        <ul>
+          <li><a href="{{ site.Params.github }}" rel="noopener">GitHub</a></li>
+          <li><a href="{{ site.Params.github }}/issues" rel="noopener">Issues</a></li>
+          <li><a href="{{ site.Params.github }}/blob/main/LICENSE" rel="noopener">License (AGPL)</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+  <div class="container site-footer__base">
+    <small>© {{ now.Year }} Mythos. Made for the home, kept on the home.</small>
+  </div>
+</footer>

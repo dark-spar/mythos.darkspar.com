@@ -1,0 +1,22 @@
+{{ define "main" }}
+<section class="listing">
+  <div class="container container--narrow">
+    <header class="prose-page__head">
+      <p class="eyebrow">{{ .Section | humanize }}</p>
+      <h1>{{ .Title }}</h1>
+      {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
+    </header>
+    <ul class="listing__items">
+      {{ range .Pages.ByDate.Reverse }}
+        <li class="listing__item">
+          <a href="{{ .RelPermalink }}">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+            <h2>{{ .Title }}</h2>
+            {{ with .Description }}<p>{{ . }}</p>{{ end }}
+          </a>
+        </li>
+      {{ end }}
+    </ul>
+  </div>
+</section>
+{{ end }}

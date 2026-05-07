@@ -1,0 +1,58 @@
+baseURL = "https://mythos.app/"
+locale = "en-us"
+title = "Mythos — Your stories, your hearth"
+enableRobotsTXT = true
+enableEmoji = false
+
+[params]
+  description = "A self-hosted media server built in Rust. Stream your films, shows, and music to every screen in the house — privately, beautifully, fast."
+  tagline = "Your stories, your hearth."
+  author = "Mythos"
+  github = "https://github.com/mattmoore/mythos"
+  version = "0.1.0"
+
+[params.hero]
+  eyebrow = "Self-hosted media, reimagined"
+  heading = "Gather around your library."
+  subheading = "Mythos is a fast, private media server written in Rust — the kind that fades into the background so the movie can take the screen."
+
+[menu]
+  [[menu.main]]
+    name = "Features"
+    url = "/#features"
+    weight = 10
+  [[menu.main]]
+    name = "Docs"
+    url = "/docs/"
+    weight = 20
+  [[menu.main]]
+    name = "Download"
+    url = "/download/"
+    weight = 30
+  [[menu.main]]
+    name = "Blog"
+    url = "/blog/"
+    weight = 40
+
+[markup]
+  [markup.highlight]
+    style = "monokailight"
+    noClasses = false
+    lineNos = false
+    tabWidth = 2
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 4
+
+[outputs]
+  home = ["HTML", "RSS"]
+  section = ["HTML", "RSS"]
+
+[taxonomies]
+  tag = "tags"
+
+[build]
+  writeStats = true

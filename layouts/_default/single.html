@@ -1,0 +1,14 @@
+{{ define "main" }}
+<article class="prose-page">
+  <div class="container container--narrow">
+    <header class="prose-page__head">
+      <p class="eyebrow">{{ with .Section }}{{ . | humanize }}{{ end }}</p>
+      <h1>{{ .Title }}</h1>
+      {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
+    </header>
+    <div class="prose">
+      {{ .Content }}
+    </div>
+  </div>
+</article>
+{{ end }}

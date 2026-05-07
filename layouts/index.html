@@ -1,0 +1,142 @@
+{{ define "main" }}
+<section class="hero">
+  <div class="hero__glow" aria-hidden="true"></div>
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="container hero__inner">
+    <p class="eyebrow">{{ site.Params.hero.eyebrow }}</p>
+    <h1 class="hero__heading">
+      {{ site.Params.hero.heading }}
+    </h1>
+    <p class="hero__sub">{{ site.Params.hero.subheading }}</p>
+    <div class="hero__cta">
+      <a class="btn btn--primary" href="{{ "/download/" | relURL }}">Download Mythos</a>
+      <a class="btn btn--ghost" href="{{ "/docs/getting-started/" | relURL }}">Read the docs →</a>
+    </div>
+    <ul class="hero__bullets" aria-label="At a glance">
+      <li><span class="dot"></span> Single static binary</li>
+      <li><span class="dot"></span> Built in Rust</li>
+      <li><span class="dot"></span> Self-hosted, no telemetry</li>
+      <li><span class="dot"></span> AGPLv3 — free forever</li>
+    </ul>
+  </div>
+  <div class="hero__screen container">
+    {{ partial "screen.html" . }}
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="container">
+    <header class="section-head">
+      <p class="eyebrow">Features</p>
+      <h2>Everything you'd want, none of the things you wouldn't.</h2>
+      <p class="section-head__sub">Mythos is opinionated about staying out of the way. The defaults are quiet, the configuration is shallow, and your library never leaves the house.</p>
+    </header>
+    <ul class="feature-grid">
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/film.html" . }}</span>
+        <h3>Films, shows, music, photos</h3>
+        <p>One server for the whole library. Mythos handles the standard layouts out of the box and respects what's already on disk.</p>
+      </li>
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/bolt.html" . }}</span>
+        <h3>Hardware-accelerated</h3>
+        <p>VAAPI, QSV, NVENC, VideoToolbox. Mythos picks the right encoder automatically and keeps a 4K stream on a fan-quiet box.</p>
+      </li>
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/shield.html" . }}</span>
+        <h3>Private by construction</h3>
+        <p>No phoning home. No analytics. No third-party SDK reading your watch history. The server runs on your hardware and stops there.</p>
+      </li>
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/feather.html" . }}</span>
+        <h3>Light on the metal</h3>
+        <p>Under 100 MB of RAM at idle. The whole binary is 12 MB. A Raspberry Pi 5 can serve the whole household.</p>
+      </li>
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/users.html" . }}</span>
+        <h3>Built for the household</h3>
+        <p>Per-user libraries, child-safe accounts, watch-together rooms (coming soon). The little choices that make the living room work.</p>
+      </li>
+      <li class="feature">
+        <span class="feature__icon" aria-hidden="true">{{ partial "icons/code.html" . }}</span>
+        <h3>Open and inspectable</h3>
+        <p>AGPLv3, every dependency vendored and audited. The whole codebase is small enough to read in an afternoon.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="quote">
+  <div class="container quote__inner">
+    <blockquote>
+      <p>“The good software is the software you forget about. It's there when you need it, gone when you don't, and it never asks you to manage it.”</p>
+      <cite>— design notes, on the way to v0.1</cite>
+    </blockquote>
+  </div>
+</section>
+
+<section id="screenshots" class="showcase">
+  <div class="container">
+    <header class="section-head">
+      <p class="eyebrow">A look inside</p>
+      <h2>Warm where it lives, fast where it runs.</h2>
+    </header>
+    <div class="showcase__grid">
+      <figure class="shot shot--lg">
+        {{ partial "shots/library.html" . }}
+        <figcaption>Library view — large posters, spacious rows, the metadata you care about and nothing else.</figcaption>
+      </figure>
+      <figure class="shot">
+        {{ partial "shots/detail.html" . }}
+        <figcaption>Title detail — synopsis, cast, file info, all on one screen.</figcaption>
+      </figure>
+      <figure class="shot">
+        {{ partial "shots/player.html" . }}
+        <figcaption>Player — a clean overlay that gets out of the way.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container install__inner">
+    <header class="section-head section-head--center">
+      <p class="eyebrow">Get started</p>
+      <h2>One command to running.</h2>
+    </header>
+    <div class="install__card">
+      <div class="install__tabs" role="tablist">
+        <button class="install__tab is-active" role="tab" data-tab="docker">Docker</button>
+        <button class="install__tab" role="tab" data-tab="binary">Binary</button>
+        <button class="install__tab" role="tab" data-tab="cargo">Cargo</button>
+      </div>
+      <div class="install__panels">
+        <pre class="install__panel is-active" data-panel="docker"><code>docker run -d \
+  --name mythos \
+  -p 7878:7878 \
+  -v /srv/media:/media:ro \
+  -v mythos-data:/var/lib/mythos \
+  ghcr.io/mattmoore/mythos:latest</code></pre>
+        <pre class="install__panel" data-panel="binary"><code>curl -sSL https://mythos.app/install.sh | sh
+mythos --config /etc/mythos/config.toml</code></pre>
+        <pre class="install__panel" data-panel="cargo"><code>git clone https://github.com/mattmoore/mythos
+cd mythos
+cargo build --release
+./target/release/mythos-server</code></pre>
+      </div>
+    </div>
+    <p class="install__hint">Then open <code>http://localhost:7878</code> and walk through first-run setup.</p>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container cta__inner">
+    <h2>The hearth is ready.</h2>
+    <p>Pull up a chair. Mythos is small, fast, and quiet — and it's yours.</p>
+    <div class="cta__buttons">
+      <a class="btn btn--primary" href="{{ "/download/" | relURL }}">Download Mythos</a>
+      <a class="btn btn--ghost" href="{{ site.Params.github }}" rel="noopener">View source</a>
+    </div>
+  </div>
+</section>
+{{ end }}

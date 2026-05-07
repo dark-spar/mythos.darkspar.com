@@ -1,0 +1,15 @@
+{{ define "main" }}
+<section class="download">
+  <div class="container container--narrow">
+    <header class="prose-page__head prose-page__head--center">
+      <p class="eyebrow">Download</p>
+      <h1>{{ .Title }}</h1>
+      {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
+      <p class="download__version">Latest release · v{{ site.Params.version }}</p>
+    </header>
+    <div class="prose prose--download">
+      {{ .Content }}
+    </div>
+  </div>
+</section>
+{{ end }}

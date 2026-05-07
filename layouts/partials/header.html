@@ -1,0 +1,21 @@
+<header class="site-header">
+  <div class="container site-header__row">
+    <a class="brand" href="{{ "/" | relURL }}" aria-label="Mythos home">
+      {{ partial "logo.html" . }}
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <button class="nav__toggle" aria-expanded="false" aria-controls="primary-nav">
+        <span class="nav__toggle-bar"></span>
+        <span class="sr-only">Menu</span>
+      </button>
+      <ul id="primary-nav" class="nav__list">
+        {{ range site.Menus.main }}
+          <li class="nav__item"><a class="nav__link" href="{{ .URL | relURL }}">{{ .Name }}</a></li>
+        {{ end }}
+        <li class="nav__item nav__item--cta">
+          <a class="btn btn--ghost" href="{{ site.Params.github }}" rel="noopener">GitHub</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>

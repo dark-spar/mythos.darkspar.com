@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body class="page page--{{ if .IsHome }}home{{ else }}{{ with .Section }}{{ . }}{{ else }}page{{ end }}{{ end }}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  {{ partial "header.html" . }}
+  <main id="main" class="main">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{ partial "footer.html" . }}
+  {{ $js := resources.Get "js/main.js" | resources.Minify | resources.Fingerprint }}
+  <script src="{{ $js.RelPermalink }}" defer></script>
+</body>
+</html>
