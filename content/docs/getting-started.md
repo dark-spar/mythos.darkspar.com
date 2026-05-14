@@ -14,7 +14,7 @@ docker run -d \
   -p 7878:7878 \
   -v /srv/media:/media:ro \
   -v mythos-data:/var/lib/mythos \
-  ghcr.io/mattmoore/mythos:latest
+  ghcr.io/dark-spar/mythos:latest
 ```
 
 A couple of things to notice. The media volume is mounted **read-only** — Mythos never writes to your library. The data volume is where Mythos keeps its own database, posters, and transcoded segments.

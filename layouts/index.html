@@ -16,7 +16,7 @@
       <li><span class="dot"></span> Single static binary</li>
       <li><span class="dot"></span> Built in Rust</li>
       <li><span class="dot"></span> Self-hosted, no telemetry</li>
-      <li><span class="dot"></span> AGPLv3 — free forever</li>
+      <li><span class="dot"></span> MIT licensed — free forever</li>
     </ul>
   </div>
   <div class="hero__screen container">
@@ -60,7 +60,7 @@
       <li class="feature">
         <span class="feature__icon" aria-hidden="true">{{ partial "icons/code.html" . }}</span>
         <h3>Open and inspectable</h3>
-        <p>AGPLv3, every dependency vendored and audited. The whole codebase is small enough to read in an afternoon.</p>
+        <p>MIT licensed, every dependency vendored and audited. The whole codebase is small enough to read in an afternoon.</p>
       </li>
     </ul>
   </div>
@@ -116,10 +116,10 @@
   -p 7878:7878 \
   -v /srv/media:/media:ro \
   -v mythos-data:/var/lib/mythos \
-  ghcr.io/mattmoore/mythos:latest</code></pre>
+  ghcr.io/dark-spar/mythos:latest</code></pre>
         <pre class="install__panel" data-panel="binary"><code>curl -sSL https://mythos.app/install.sh | sh
 mythos --config /etc/mythos/config.toml</code></pre>
-        <pre class="install__panel" data-panel="cargo"><code>git clone https://github.com/mattmoore/mythos
+        <pre class="install__panel" data-panel="cargo"><code>git clone https://github.com/dark-spar/mythos
 cd mythos
 cargo build --release
 ./target/release/mythos-server</code></pre>

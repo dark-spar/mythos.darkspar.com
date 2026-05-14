@@ -1,13 +1,18 @@
 <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="ember" cx="50%" cy="58%" r="55%">
-      <stop offset="0%" stop-color="#ffd28a"/>
-      <stop offset="40%" stop-color="#f5a25b"/>
-      <stop offset="80%" stop-color="#c4523f"/>
-      <stop offset="100%" stop-color="#5a1f15"/>
+    <radialGradient id="spice" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#f4cb7a"/>
+      <stop offset="55%" stop-color="#d9a44f"/>
+      <stop offset="100%" stop-color="#8f5c25"/>
     </radialGradient>
+    <linearGradient id="dune" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9b791" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#7a6a52" stop-opacity="0.6"/>
+    </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="7" fill="#14100c"/>
-  <circle cx="16" cy="17" r="9" fill="url(#ember)"/>
-  <path d="M16 6 c1.4 2.8 3.8 4.2 3.8 7 a3.8 3.8 0 1 1 -7.6 0 c0 -2.8 2.4 -4.2 3.8 -7 z" fill="#ffe1a8" opacity="0.92"/>
+  <rect width="32" height="32" rx="2" fill="#0a0908"/>
+  <circle cx="16" cy="14" r="8" fill="url(#spice)"/>
+  <circle cx="16" cy="14" r="10.5" stroke="#ede1c5" stroke-opacity="0.45" stroke-width="0.5" fill="none"/>
+  <path d="M2 22 Q 9 18, 16 22 T 30 22 L 30 30 L 2 30 Z" fill="url(#dune)"/>
+  <path d="M2 22 Q 9 18, 16 22 T 30 22" stroke="#ede1c5" stroke-opacity="0.6" stroke-width="0.5" fill="none"/>
 </svg>

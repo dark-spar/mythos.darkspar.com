@@ -16,7 +16,7 @@ docker run -d \
   -p 7878:7878 \
   -v /path/to/media:/media:ro \
   -v mythos-data:/var/lib/mythos \
-  ghcr.io/mattmoore/mythos:latest
+  ghcr.io/dark-spar/mythos:latest
 ```
 
 Then open <code>http://localhost:7878</code> and walk through the first-run setup.
@@ -37,7 +37,7 @@ Binaries are signed and reproducible. Verify the checksum from the release page.
 You'll need Rust 1.95 or newer.
 
 ```sh
-git clone https://github.com/mattmoore/mythos
+git clone https://github.com/dark-spar/mythos
 cd mythos
 cargo build --release
 ./target/release/mythos-server
@@ -48,8 +48,8 @@ cargo build --release
 Native packages for common Linux distributions and homebrew. Pick yours below.
 
 - **Arch Linux** — <code>yay -S mythos</code>
-- **Debian / Ubuntu** — `.deb` on the [releases page](https://github.com/mattmoore/mythos/releases)
-- **macOS** — <code>brew install mattmoore/tap/mythos</code>
+- **Debian / Ubuntu** — `.deb` on the [releases page](https://github.com/dark-spar/mythos/releases)
+- **macOS** — <code>brew install dark-spar/tap/mythos</code>
 - **NixOS** — flake on the repo, module included
 
 ## Hardware
