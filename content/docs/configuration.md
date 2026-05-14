@@ -25,7 +25,7 @@ All keys live at the top level — there are no sections.
 
 | Key | Default | Description |
 |---|---|---|
-| `listen` | `127.0.0.1:8080` | Socket address the HTTP server binds to. |
+| `listen` | `0.0.0.0:8080` | Socket address the HTTP server binds to. Defaults to all interfaces so the server is reachable from other devices on the LAN out of the box; bind to `127.0.0.1:8080` if you'd rather keep it localhost-only. |
 | `data_dir` | `./data` | Where Mythos stores the SQLite DB, posters, transcode segments, subtitles, and the JWT secret. |
 | `log_filter` | `info,mythos=debug,sqlx=warn` | `tracing-subscriber` env-filter directive. |
 | `cookie_secure` | `true` in release, `false` in debug | Sets the `Secure` flag on auth cookies. Override to `false` if you terminate TLS upstream. |

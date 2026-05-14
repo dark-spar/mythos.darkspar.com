@@ -26,12 +26,12 @@
         <span class="terminal-title">~/mythos — cargo run</span>
       </div>
       <pre class="terminal-body"><code><span class="t-prompt">$</span> <span class="t-cmd">cargo run</span> --release --bin mythos-server
-<span class="t-muted">┃</span> config       <span class="t-ok">✓</span> listen=127.0.0.1:8080 · data_dir=./data
+<span class="t-muted">┃</span> config       <span class="t-ok">✓</span> listen=0.0.0.0:8080 · data_dir=./data
 <span class="t-muted">┃</span> migrate      <span class="t-ok">✓</span> 7 migrations applied · sqlite ./data/mythos.db
 <span class="t-muted">┃</span> hwaccel      <span class="t-ok">✓</span> probe ffmpeg · vaapi smoke-test passed
 <span class="t-muted">┃</span> jwt          <span class="t-ok">✓</span> loaded ./data/jwt.secret · 32 bytes
 <span class="t-muted">┃</span> embed        <span class="t-ok">✓</span> spa from rust-embed · 142 assets
-<span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> serving http://127.0.0.1:8080
+<span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> serving http://0.0.0.0:8080
 <span class="t-prompt">$</span> <span class="t-cursor">█</span></code></pre>
     </div>
   </div>
@@ -131,7 +131,7 @@
   <div class="cli-grid">
     <article class="cli-card cli-card-feature">
       <h3><code>cargo run</code></h3>
-      <p>One command builds the SPA (via <code>pnpm build</code>) and the Rust binary, then boots the server on <code>127.0.0.1:8080</code>.</p>
+      <p>One command builds the SPA (via <code>pnpm build</code>) and the Rust binary, then boots the server on <code>0.0.0.0:8080</code> — reachable from any device on your LAN.</p>
       <pre><code>git clone https://gitlab.com/darkspar/mythos
 cd mythos
 cargo run --release --bin mythos-server</code></pre>

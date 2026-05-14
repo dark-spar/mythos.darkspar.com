@@ -28,12 +28,17 @@ which `rust-embed` bakes into the binary.
 When it's up, the log line you're looking for is:
 
 ```
-INFO mythos: ready on http://127.0.0.1:8080
+INFO mythos: ready on http://0.0.0.0:8080
 ```
+
+The server binds to all interfaces by default, so it's reachable from any
+device on the LAN. To restrict it to localhost, set
+`MYTHOS_LISTEN=127.0.0.1:8080` (or put `listen = "127.0.0.1:8080"` in
+`mythos.toml`).
 
 ## 3. First-run setup
 
-Visit <code>http://127.0.0.1:8080</code>. You'll be walked through:
+Visit <code>http://localhost:8080</code>. You'll be walked through:
 
 1. Creating the first administrator account.
 2. (Optional) Setting your TMDb API key, so scans enrich titles and posters.

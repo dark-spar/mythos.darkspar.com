@@ -31,7 +31,9 @@ The build script in `crates/mythos-server` invokes `pnpm install && pnpm build`
 in `web/` so the SPA is compiled and embedded in the same `cargo` invocation.
 Set `MYTHOS_SKIP_WEB_BUILD=1` if you only want to rebuild the Rust side.
 
-Then open <code>http://127.0.0.1:8080</code>. First-run setup walks through
+Then open <code>http://localhost:8080</code> (or `http://<lan-ip>:8080` from
+another device — the default `listen` is `0.0.0.0:8080`). First-run setup
+walks through
 creating an admin account and adding a library.
 
 ## Hardware acceleration
