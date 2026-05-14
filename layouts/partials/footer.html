@@ -1,29 +1,12 @@
 <footer class="site-footer">
-  <div class="container site-footer__row">
-    <div class="site-footer__brand">
-      {{ partial "logo.html" . }}
-      <p class="site-footer__tagline">{{ site.Params.tagline }}</p>
-    </div>
-    <nav class="site-footer__nav" aria-label="Footer">
-      <div class="site-footer__col">
-        <h4>Mythos</h4>
-        <ul>
-          <li><a href="{{ "/docs/" | relURL }}">Documentation</a></li>
-          <li><a href="{{ "/download/" | relURL }}">Download</a></li>
-          <li><a href="{{ "/blog/" | relURL }}">Blog</a></li>
-        </ul>
-      </div>
-      <div class="site-footer__col">
-        <h4>Project</h4>
-        <ul>
-          <li><a href="{{ site.Params.gitlab }}" rel="noopener">GitLab</a></li>
-          <li><a href="{{ site.Params.gitlab }}/-/issues" rel="noopener">Issues</a></li>
-          <li><a href="{{ site.Params.gitlab }}/-/blob/main/LICENSE" rel="noopener">License (MIT)</a></li>
-        </ul>
-      </div>
-    </nav>
-  </div>
-  <div class="container site-footer__base">
-    <small>© {{ now.Year }} Mythos. Made for the home, kept on the home.</small>
+  <div class="container site-footer-inner">
+    <p class="site-footer-tag">
+      {{ site.Params.tagline }}
+    </p>
+    <p class="site-footer-meta">
+      © {{ now.Year }} Mythos. Self-hosted, no telemetry, MIT licensed.
+      <span class="dot" aria-hidden="true">·</span>
+      <a href="{{ site.Params.gitlab }}" target="_blank" rel="noopener">Source on GitLab</a>
+    </p>
   </div>
 </footer>

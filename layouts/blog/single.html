@@ -1,17 +1,21 @@
 {{ define "main" }}
-<article class="post">
-  <div class="container container--narrow">
-    <header class="post__head">
-      <p class="eyebrow"><a href="{{ "/blog/" | relURL }}">Blog</a></p>
-      <h1>{{ .Title }}</h1>
-      <p class="post__meta">
-        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
-        {{ with .Params.tags }} · {{ delimit . ", " }}{{ end }}
-      </p>
-    </header>
-    <div class="prose">
-      {{ .Content }}
-    </div>
+<article class="container prose">
+  <header class="page-header">
+    <h1 class="page-title">{{ .Title }}</h1>
+    {{- with .Description }}<p class="page-lede">{{ . }}</p>{{ end -}}
+    <p class="page-meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+      {{- with .Params.tags }} · {{ delimit . ", " }}{{ end -}}
+    </p>
+  </header>
+  {{- if and (gt (len .TableOfContents) 50) -}}
+  <nav class="toc" aria-label="On this page">
+    <p class="toc-label">On this page</p>
+    {{ .TableOfContents }}
+  </nav>
+  {{- end -}}
+  <div class="page-content">
+    {{ .Content }}
   </div>
 </article>
 {{ end }}

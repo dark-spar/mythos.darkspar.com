@@ -1,22 +1,28 @@
 {{ define "main" }}
-<section class="listing">
-  <div class="container container--narrow">
-    <header class="prose-page__head">
-      <p class="eyebrow">{{ .Section | humanize }}</p>
-      <h1>{{ .Title }}</h1>
-      {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
-    </header>
-    <ul class="listing__items">
-      {{ range .Pages.ByDate.Reverse }}
-        <li class="listing__item">
-          <a href="{{ .RelPermalink }}">
-            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
-            <h2>{{ .Title }}</h2>
-            {{ with .Description }}<p>{{ . }}</p>{{ end }}
-          </a>
-        </li>
-      {{ end }}
+<section class="container prose">
+  <header class="page-header">
+    <h1 class="page-title">{{ .Title }}</h1>
+    {{- with .Description }}<p class="page-lede">{{ . }}</p>{{ end -}}
+  </header>
+  <div class="page-content">
+    {{ .Content }}
+    {{- $pages := .Pages.ByDate.Reverse -}}
+    {{- if $pages -}}
+    <ul class="card-list">
+      {{- range $pages -}}
+      <li>
+        <a class="card" href="{{ .RelPermalink }}">
+          {{- if not .Date.IsZero -}}
+          <p class="card-meta"><time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time></p>
+          {{- end -}}
+          <h2 class="card-title">{{ .Title }}</h2>
+          {{- with .Description }}<p class="card-desc">{{ . }}</p>{{ end -}}
+          <span class="card-cta">Read <span aria-hidden="true">→</span></span>
+        </a>
+      </li>
+      {{- end -}}
     </ul>
+    {{- end -}}
   </div>
 </section>
 {{ end }}

@@ -1,14 +1,17 @@
 {{ define "main" }}
-<article class="prose-page">
-  <div class="container container--narrow">
-    <header class="prose-page__head">
-      <p class="eyebrow">{{ with .Section }}{{ . | humanize }}{{ end }}</p>
-      <h1>{{ .Title }}</h1>
-      {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
-    </header>
-    <div class="prose">
-      {{ .Content }}
-    </div>
+<article class="container prose">
+  <header class="page-header">
+    <h1 class="page-title">{{ .Title }}</h1>
+    {{- with .Description }}<p class="page-lede">{{ . }}</p>{{ end -}}
+  </header>
+  {{- if and (gt (len .TableOfContents) 50) (not (eq .Type "page")) -}}
+  <nav class="toc" aria-label="On this page">
+    <p class="toc-label">On this page</p>
+    {{ .TableOfContents }}
+  </nav>
+  {{- end -}}
+  <div class="page-content">
+    {{ .Content }}
   </div>
 </article>
 {{ end }}

@@ -1,55 +1,66 @@
 baseURL = "https://mythos.darkspar.com/"
 locale = "en-us"
-title = "Mythos — Your stories, your hearth"
+title = "mythos"
 enableRobotsTXT = true
 enableEmoji = false
+
+defaultContentLanguage = "en"
+
+[languages]
+  [languages.en]
+    locale = "en-US"
+    label = "English"
+    weight = 1
 
 [params]
   description = "A self-hosted media server built in Rust. Stream your films, shows, and music to every screen in the house — privately, beautifully, fast."
   tagline = "Your stories, your hearth."
   author = "Mythos"
   gitlab = "https://gitlab.com/darkspar/mythos"
+  repo = "https://gitlab.com/darkspar/mythos"
   version = "0.1.0"
 
 [params.hero]
-  eyebrow = "Self-hosted media, reimagined"
+  eyebrow = "Self-hosted · Rust · MIT"
   heading = "Gather around your library."
   subheading = "Mythos is a fast, private media server written in Rust — the kind that fades into the background so the movie can take the screen."
 
-[menu]
-  [[menu.main]]
-    name = "Features"
-    url = "/#features"
-    weight = 10
-  [[menu.main]]
-    name = "Docs"
-    url = "/docs/"
-    weight = 20
-  [[menu.main]]
-    name = "Download"
-    url = "/download/"
-    weight = 30
-  [[menu.main]]
-    name = "Blog"
-    url = "/blog/"
-    weight = 40
-
 [markup]
   [markup.highlight]
-    style = "monokailight"
     noClasses = false
     lineNos = false
+    codeFences = true
+    guessSyntax = true
     tabWidth = 2
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
   [markup.tableOfContents]
     startLevel = 2
-    endLevel = 4
+    endLevel = 3
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    pageRef = "/"
+    weight = 10
+  [[menu.main]]
+    name = "Docs"
+    pageRef = "/docs"
+    weight = 20
+  [[menu.main]]
+    name = "Download"
+    pageRef = "/download"
+    weight = 30
+  [[menu.main]]
+    name = "Blog"
+    pageRef = "/blog"
+    weight = 40
 
 [outputs]
   home = ["HTML", "RSS"]
   section = ["HTML", "RSS"]
+  page = ["HTML"]
 
 [taxonomies]
   tag = "tags"

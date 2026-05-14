@@ -1,16 +1,39 @@
-<!doctype html>
-<html lang="en" class="no-js">
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang | default "en" }}" data-theme="dark">
 <head>
-  {{ partial "head.html" . }}
+{{- partial "head.html" . -}}
 </head>
-<body class="page page--{{ if .IsHome }}home{{ else }}{{ with .Section }}{{ . }}{{ else }}page{{ end }}{{ end }}">
-  <a class="skip-link" href="#main">Skip to content</a>
-  {{ partial "header.html" . }}
-  <main id="main" class="main">
-    {{ block "main" . }}{{ end }}
-  </main>
-  {{ partial "footer.html" . }}
-  {{ $js := resources.Get "js/main.js" | resources.Minify | resources.Fingerprint }}
-  <script src="{{ $js.RelPermalink }}" defer></script>
+<body>
+{{- partial "header.html" . -}}
+<main class="main" id="content">
+{{- block "main" . }}{{ end -}}
+</main>
+{{- partial "footer.html" . -}}
+<script>
+  // Theme toggle: persists to localStorage. Defaults to OS preference.
+  (function () {
+    var root = document.documentElement;
+    var stored = null;
+    try { stored = localStorage.getItem('mythos-theme'); } catch (e) {}
+    var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    var initial = stored || (prefersLight ? 'light' : 'dark');
+    root.setAttribute('data-theme', initial);
+    var btn = document.getElementById('theme-toggle');
+    if (btn) {
+      var sync = function () {
+        var current = root.getAttribute('data-theme');
+        btn.setAttribute('aria-pressed', current === 'light' ? 'true' : 'false');
+        btn.setAttribute('title', 'Switch to ' + (current === 'light' ? 'dark' : 'light') + ' theme');
+      };
+      sync();
+      btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('mythos-theme', next); } catch (e) {}
+        sync();
+      });
+    }
+  })();
+</script>
 </body>
 </html>

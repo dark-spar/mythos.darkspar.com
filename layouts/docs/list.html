@@ -1,31 +1,25 @@
 {{ define "main" }}
-<section class="docs">
-  <div class="container docs__layout">
-    <aside class="docs__sidebar" aria-label="Documentation navigation">
-      <p class="eyebrow">Documentation</p>
-      <ul>
-        <li><a href="{{ .RelPermalink }}" {{ if eq .RelPermalink .RelPermalink }}class="is-active"{{ end }}>Overview</a></li>
-        {{ range .Pages.ByWeight }}
-          <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
-        {{ end }}
-      </ul>
-    </aside>
-    <article class="docs__article prose">
-      <header class="prose-page__head">
-        <h1>{{ .Title }}</h1>
-        {{ with .Description }}<p class="prose-page__lede">{{ . }}</p>{{ end }}
-      </header>
-      {{ .Content }}
-      <nav class="docs__cards">
-        {{ range .Pages.ByWeight }}
-          <a class="docs__card" href="{{ .RelPermalink }}">
-            <h3>{{ .Title }}</h3>
-            <p>{{ .Description }}</p>
-            <span class="docs__card-arrow">→</span>
-          </a>
-        {{ end }}
-      </nav>
-    </article>
+<section class="container prose">
+  <header class="page-header">
+    <h1 class="page-title">{{ .Title }}</h1>
+    {{- with .Description }}<p class="page-lede">{{ . }}</p>{{ end -}}
+  </header>
+  <div class="page-content">
+    {{ .Content }}
+    {{- $pages := .Pages.ByWeight -}}
+    {{- if $pages -}}
+    <ul class="card-list">
+      {{- range $pages -}}
+      <li>
+        <a class="card" href="{{ .RelPermalink }}">
+          <h2 class="card-title">{{ .Title }}</h2>
+          {{- with .Description }}<p class="card-desc">{{ . }}</p>{{ end -}}
+          <span class="card-cta">Read <span aria-hidden="true">→</span></span>
+        </a>
+      </li>
+      {{- end -}}
+    </ul>
+    {{- end -}}
   </div>
 </section>
 {{ end }}
