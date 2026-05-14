@@ -1,6 +1,8 @@
 ---
-title: "Blog & Changelog"
-description: "Release notes, design notes, and the occasional long read."
+title: "Blog"
+description: "Status updates and design notes from Mythos."
 ---
 
-The latest from Mythos — what shipped, what's brewing, and the thinking behind the choices we make.
+Notes on what's shipping in `main`, why it's shaped the way it is, and what's
+next. Mythos has not cut a tagged release yet — these posts track phases as
+they land.

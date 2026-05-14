@@ -1,40 +1,59 @@
 ---
 title: "Getting Started"
-description: "From zero to streaming in five minutes."
+description: "Clone, build, and serve your first movie."
 weight: 10
 ---
 
-This guide gets you from a fresh install to playing your first movie. We'll use Docker, but every other install path lands in the same place.
+This is the path that works today. There is no released binary, no Docker
+image, no package manager entry — Mythos is built from source on `main`.
 
-## 1. Run the server
+## 1. Install prerequisites
+
+- **Rust 1.95+** — `rustup` will pick it up from `rust-toolchain.toml`.
+- **Node 22+** and **pnpm 10+** — the SvelteKit UI is built and embedded.
+- **ffmpeg / ffprobe** on PATH — used by the scanner and the HLS transcoder.
+
+## 2. Clone and run
 
 ```sh
-docker run -d \
-  --name mythos \
-  -p 7878:7878 \
-  -v /srv/media:/media:ro \
-  -v mythos-data:/var/lib/mythos \
-  ghcr.io/dark-spar/mythos:latest
+git clone https://gitlab.com/darkspar/mythos
+cd mythos
+cargo run --release --bin mythos-server
 ```
 
-A couple of things to notice. The media volume is mounted **read-only** — Mythos never writes to your library. The data volume is where Mythos keeps its own database, posters, and transcoded segments.
+The first build is slow — Cargo compiles the workspace and the `build.rs` in
+`mythos-server` runs `pnpm install && pnpm build` to produce `web/build/`,
+which `rust-embed` bakes into the binary.
 
-## 2. Open the web UI
+When it's up, the log line you're looking for is:
 
-Visit <code>http://localhost:7878</code>. You'll be walked through:
+```
+INFO mythos: ready on http://127.0.0.1:8080
+```
 
-1. Creating the first administrator account
-2. Adding a library (point it at <code>/media</code>)
-3. Choosing a metadata source
+## 3. First-run setup
 
-The first scan starts immediately. On a typical library, posters and metadata are populated within a few minutes.
+Visit <code>http://127.0.0.1:8080</code>. You'll be walked through:
 
-## 3. Watch something
+1. Creating the first administrator account.
+2. (Optional) Setting your TMDb API key, so scans enrich titles and posters.
+   Without one, scans still index files — they just won't have titles or
+   art beyond what's in the filename.
+3. Adding a library — point it at a directory of movies on disk. The scan
+   starts immediately.
 
-Click any title. Mythos picks the best playback strategy automatically — direct play if your client can handle the file, hardware-accelerated transcoding if it can't.
+## 4. Watch something
+
+Pick any movie. Mythos serves the file directly (HTTP byte-range) if your
+browser can decode it, and falls back to an on-the-fly HLS transcode if it
+can't. Hardware acceleration is picked automatically at startup if it's
+available.
 
 ## What's next
 
-- [Configuration reference](../configuration/) — the full <code>config.toml</code>
-- [Library layout](../library-layout/) — how Mythos discovers and groups your files
-- [Architecture](../architecture/) — what's happening under the hood
+- [Configuration](../configuration/) — the `mythos.toml` keys and `MYTHOS_*`
+  env vars that actually exist.
+- [Library layout](../library-layout/) — how the scanner reads filenames
+  today, and what's still scheduled.
+- [Architecture](../architecture/) — the workspace, the runtime, and the
+  shape of the streaming pipeline.

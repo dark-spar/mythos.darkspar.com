@@ -1,57 +1,52 @@
 ---
 title: "Download"
-description: "Get Mythos running on your home server in a few minutes."
+description: "Mythos is in early development. The only supported install path right now is build-from-source."
 layout: "download"
 ---
 
-Pick the path that fits your setup. Mythos ships as a single static binary, a Docker image, or source you can build yourself.
+Mythos has not cut a tagged release yet. The repository builds end-to-end on the
+`main` branch — that's the path described below. Pre-built binaries, container
+images, and platform packages will land when the project hits a real `v0.1.0`.
 
-## Docker
+## Prerequisites
 
-The fastest way to try Mythos. Mounts your media directory read-only and exposes the web UI on port 7878.
+A working toolchain for both the Rust server and the embedded SvelteKit UI, plus
+`ffmpeg`/`ffprobe` on PATH for library scans and HLS transcoding.
 
-```sh
-docker run -d \
-  --name mythos \
-  -p 7878:7878 \
-  -v /path/to/media:/media:ro \
-  -v mythos-data:/var/lib/mythos \
-  ghcr.io/dark-spar/mythos:latest
-```
+- Rust 1.95+ (pinned in `rust-toolchain.toml`)
+- Node 22+
+- pnpm 10+
+- ffmpeg / ffprobe (recent enough to expose the encoders you want — `h264_nvenc`,
+  `h264_qsv`, `h264_vaapi`, `h264_videotoolbox`, or `libx264` as a fallback)
 
-Then open <code>http://localhost:7878</code> and walk through the first-run setup.
-
-## Pre-built binary
-
-Static, single-file binaries for Linux, macOS, and Windows. No runtime, no dependencies.
-
-```sh
-curl -sSL https://mythos.darkspar.com/install.sh | sh
-mythos --config /etc/mythos/config.toml
-```
-
-Binaries are signed and reproducible. Verify the checksum from the release page.
-
-## Build from source
-
-You'll need Rust 1.95 or newer.
+## Build and run
 
 ```sh
 git clone https://gitlab.com/darkspar/mythos
 cd mythos
-cargo build --release
-./target/release/mythos-server
+cargo run --release --bin mythos-server
 ```
 
-## Platform packages
+The build script in `crates/mythos-server` invokes `pnpm install && pnpm build`
+in `web/` so the SPA is compiled and embedded in the same `cargo` invocation.
+Set `MYTHOS_SKIP_WEB_BUILD=1` if you only want to rebuild the Rust side.
 
-Native packages for common Linux distributions and homebrew. Pick yours below.
+Then open <code>http://127.0.0.1:8080</code>. First-run setup walks through
+creating an admin account and adding a library.
 
-- **Arch Linux** — <code>yay -S mythos</code>
-- **Debian / Ubuntu** — `.deb` on the [releases page](https://gitlab.com/darkspar/mythos/-/releases)
-- **macOS** — <code>brew install dark-spar/tap/mythos</code>
-- **NixOS** — flake on the repo, module included
+## Hardware acceleration
 
-## Hardware
+Mythos probes `ffmpeg -encoders` at startup and smoke-tests each candidate
+before committing to it. Priority order: NVENC → QSV → VAAPI → VideoToolbox →
+libx264. Pin a specific encoder with `MYTHOS_HW_ENCODER=vaapi` (etc.), or force
+CPU with `MYTHOS_HW_ENCODER=cpu`.
 
-Mythos is light. A Raspberry Pi 5 streams 1080p direct-play to the whole household; an old N100 mini-PC will transcode 4K on the fly. The server runs in well under 100 MB of RAM at idle.
+## Status
+
+What works today: movies — scan, browse, direct-play, HLS transcoding with
+hardware acceleration, multi-rendition ABR, subtitle burn-in and WebVTT
+sidecars, TMDb metadata enrichment.
+
+What's next: TV, music, photos, books (Phase 3), and a Jellyfin-API
+compatibility shim (Phase 6) for existing clients like Findroid and Swiftfin.
+See the [roadmap on the homepage](/#status).

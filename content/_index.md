@@ -1,4 +1,4 @@
 ---
 title: "Mythos"
-description: "A warm, fast, private media server written in Rust."
+description: "A self-hosted media server in Rust. Single binary, embedded SvelteKit UI, SQLite, hardware-accelerated HLS transcoding."
 ---

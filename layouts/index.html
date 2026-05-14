@@ -9,29 +9,29 @@
       {{ site.Params.hero.heading }}
     </h1>
     <p class="hero-lede">
-      <strong>Mythos</strong> is a fast, private media server written in <em>Rust</em>.
-      Stream films, shows, and music to every screen in the house — privately,
-      beautifully, fast. The kind of server that fades into the background so the
-      movie can take the screen.
+      <strong>Mythos</strong> is a single-binary media server with an embedded
+      <em>SvelteKit</em> UI. It scans your library, enriches metadata from TMDb,
+      and streams direct-play when it can — hardware-accelerated HLS when it can't.
+      Movies today; TV, music, photos, and books are scheduled.
     </p>
     <div class="hero-cta">
-      <a class="btn btn-primary" href="{{ "/download/" | relURL }}">Download Mythos <span aria-hidden="true">→</span></a>
-      <a class="btn btn-ghost" href="{{ "/docs/getting-started/" | relURL }}">Read the docs</a>
+      <a class="btn btn-primary" href="{{ "/docs/getting-started/" | relURL }}">Get started <span aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost" href="{{ site.Params.gitlab }}" target="_blank" rel="noopener">View on GitLab</a>
     </div>
     <div class="hero-terminal" aria-hidden="false">
       <div class="terminal-chrome">
         <span class="terminal-dot terminal-dot-r"></span>
         <span class="terminal-dot terminal-dot-y"></span>
         <span class="terminal-dot terminal-dot-g"></span>
-        <span class="terminal-title">~/srv — mythos</span>
+        <span class="terminal-title">~/mythos — cargo run</span>
       </div>
-      <pre class="terminal-body"><code><span class="t-prompt">$</span> <span class="t-cmd">mythos serve</span> --config /etc/mythos/config.toml
-<span class="t-muted">┃</span> config       <span class="t-ok">✓</span> /etc/mythos/config.toml · 3 libraries
-<span class="t-muted">┃</span> scan         <span class="t-ok">✓</span> 4,218 films · 1,094 episodes · 9,317 tracks
-<span class="t-muted">┃</span> metadata     <span class="t-ok">✓</span> TMDB + MusicBrainz · 14 NFO overrides
-<span class="t-muted">┃</span> transcode    <span class="t-ok">✓</span> VAAPI ready · iHD driver
-<span class="t-muted">┃</span> listen       <span class="t-ok">✓</span> 0.0.0.0:7878 · http2 · 12 MB RSS
-<span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> cold start 47ms · open http://localhost:7878
+      <pre class="terminal-body"><code><span class="t-prompt">$</span> <span class="t-cmd">cargo run</span> --release --bin mythos-server
+<span class="t-muted">┃</span> config       <span class="t-ok">✓</span> listen=127.0.0.1:8080 · data_dir=./data
+<span class="t-muted">┃</span> migrate      <span class="t-ok">✓</span> 7 migrations applied · sqlite ./data/mythos.db
+<span class="t-muted">┃</span> hwaccel      <span class="t-ok">✓</span> probe ffmpeg · vaapi smoke-test passed
+<span class="t-muted">┃</span> jwt          <span class="t-ok">✓</span> loaded ./data/jwt.secret · 32 bytes
+<span class="t-muted">┃</span> embed        <span class="t-ok">✓</span> spa from rust-embed · 142 assets
+<span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> serving http://127.0.0.1:8080
 <span class="t-prompt">$</span> <span class="t-cursor">█</span></code></pre>
     </div>
   </div>
@@ -40,109 +40,134 @@
 <section id="how" class="container section">
   <header class="section-head">
     <p class="eyebrow">How it fits together</p>
-    <h2 class="section-title">Scanner, library, and streamer — one binary.</h2>
+    <h2 class="section-title">Scan, enrich, stream — one binary.</h2>
   </header>
-  <pre class="pipeline" aria-label="Pipeline diagram"><code>/media ──┬─→ scanner ──→ metadata enrich (TMDB · MusicBrainz) ───┐
-         │                                                       │
-         └─→ watcher ──→ incremental updates ────────────────────┤
-                                                                 ▼
-                                                            library db
-                                                    (films · shows · music)
-                                                                 │
-                                                                 ▼
-                                            transcoder (VAAPI · QSV · NVENC)
-                                                                 │
-                                                                 ▼
-                                                            HLS / DASH
-                                                                 │
-                                                                 ▼
-                                                    every screen in the house</code></pre>
+  <pre class="pipeline" aria-label="Pipeline diagram"><code>library root ──┬─→ jwalk + ffprobe ──→ media_files + movies (SQLite) ───┐
+               │                                                        │
+               └─→ TMDb enrichment ──→ titles · posters · overviews ────┤
+                                                                        ▼
+                                                            axum HTTP API
+                                                  (auth, library, movie, play, hls)
+                                                                        │
+                                                          ┌─────────────┴─────────────┐
+                                                          ▼                           ▼
+                                                  direct play                  HLS transcode
+                                                 (byte ranges)        (ffmpeg + NVENC/QSV/VAAPI/VT)
+                                                          │                           │
+                                                          └─────────────┬─────────────┘
+                                                                        ▼
+                                                    Vidstack + hls.js in the SPA</code></pre>
 </section>
 
 <section id="features" class="container section">
   <header class="section-head">
-    <p class="eyebrow">Principles</p>
-    <h2 class="section-title">Six things Mythos is opinionated about.</h2>
+    <p class="eyebrow">What works today</p>
+    <h2 class="section-title">Six things Mythos already does.</h2>
   </header>
   <ol class="features">
     <li class="feature">
       <span class="feature-num">01</span>
-      <h3 class="feature-title">One server, the whole library.</h3>
-      <p>Films, shows, music, photos. Mythos handles the standard layouts out of the box and respects what's already on disk.</p>
+      <h3 class="feature-title">Single binary, embedded UI.</h3>
+      <p>The SvelteKit build is baked into the Rust binary via <code>rust-embed</code>. One file boots the server and serves the SPA.</p>
     </li>
     <li class="feature">
       <span class="feature-num">02</span>
-      <h3 class="feature-title">Hardware-accelerated by default.</h3>
-      <p>VAAPI, QSV, NVENC, VideoToolbox. Mythos picks the right encoder automatically and keeps a 4K stream on a fan-quiet box.</p>
+      <h3 class="feature-title">Library scan + TMDb enrichment.</h3>
+      <p>Parallel filesystem walk via <code>jwalk</code>, technical metadata via <code>ffprobe</code>, titles and posters from TMDb. Posters are proxied locally so clients never hit TMDb directly.</p>
     </li>
     <li class="feature">
       <span class="feature-num">03</span>
-      <h3 class="feature-title">Private by construction.</h3>
-      <p>No phoning home. No analytics. No third-party SDK reading your watch history. The server runs on your hardware and stops there.</p>
+      <h3 class="feature-title">Direct play with byte ranges.</h3>
+      <p>If your browser can decode the file, Mythos streams it raw with HTTP range requests. Resume points are debounced and persisted.</p>
     </li>
     <li class="feature">
       <span class="feature-num">04</span>
-      <h3 class="feature-title">Light on the metal.</h3>
-      <p>Under 100 MB of RAM at idle. The whole binary is 12 MB. A Raspberry Pi 5 can serve the whole household.</p>
+      <h3 class="feature-title">HLS transcoding when needed.</h3>
+      <p>For browser-incompatible codecs (HEVC, AV1, DTS, …) Mythos spawns an <code>ffmpeg</code> session, segments to HLS, and tears it down when the player goes away.</p>
     </li>
     <li class="feature">
       <span class="feature-num">05</span>
-      <h3 class="feature-title">Built for the household.</h3>
-      <p>Per-user libraries, child-safe accounts, watch-together rooms. The little choices that make the living room work.</p>
+      <h3 class="feature-title">Hardware-accelerated, smoke-tested.</h3>
+      <p>NVENC, QSV, VAAPI, and VideoToolbox are probed and smoke-tested at startup, so a build with the encoder compiled in but a missing driver falls back to CPU cleanly.</p>
     </li>
     <li class="feature">
       <span class="feature-num">06</span>
-      <h3 class="feature-title">Open and inspectable.</h3>
-      <p>MIT licensed, every dependency vendored and audited. The whole codebase is small enough to read in an afternoon.</p>
+      <h3 class="feature-title">Subtitles done right.</h3>
+      <p>Text subtitles ride along as WebVTT sidecars. Image subtitles (PGS/VobSub) burn in during transcode so they survive every device.</p>
     </li>
   </ol>
+</section>
+
+<section id="status" class="container section">
+  <header class="section-head">
+    <p class="eyebrow">Where we are</p>
+    <h2 class="section-title">Roadmap — track the phase, don't pull work forward.</h2>
+  </header>
+  <div class="cli-grid">
+    <article class="cli-card">
+      <h3><code>phase 0 — 1</code></h3>
+      <p><strong>Done (movies-only slice).</strong> Workspace, embedded SPA, axum boot, SQLite + migrations, argon2id + HS256 JWTs (cookie or Bearer), libraries CRUD, movies scanner + browse UI, TMDb enrichment with an admin-editable key.</p>
+    </article>
+    <article class="cli-card">
+      <h3><code>phase 2</code></h3>
+      <p><strong>Done.</strong> Direct-play streaming with byte-range support, Vidstack source binding, debounced watch progress, resume.</p>
+    </article>
+    <article class="cli-card">
+      <h3><code>phase 4 — 5</code></h3>
+      <p><strong>Done.</strong> Phase 4 ships HLS transcoding for incompatible media. Phase 5 lights up hardware acceleration (NVENC / QSV / VAAPI / VT), multi-rendition ABR, subtitle burn-in, and client-declared device profiles.</p>
+    </article>
+    <article class="cli-card cli-card-feature">
+      <h3><code>phase 3 + 6</code></h3>
+      <p><strong>Next.</strong> Phase 3 brings TV series, music, photos, and books. Phase 6 adds a Jellyfin-API-compatible shim so existing clients (Findroid, Swiftfin, jellyfin-web) work against Mythos.</p>
+    </article>
+  </div>
 </section>
 
 <section id="install" class="container section">
   <header class="section-head">
     <p class="eyebrow">Get started</p>
-    <h2 class="section-title">One command to running.</h2>
+    <h2 class="section-title">Build from source — that's the path for now.</h2>
   </header>
   <div class="cli-grid">
     <article class="cli-card cli-card-feature">
-      <h3><code>docker</code></h3>
-      <p>The fastest way to try Mythos. Mounts your media directory read-only and exposes the web UI on port 7878.</p>
-      <pre><code>docker run -d \
-  --name mythos \
-  -p 7878:7878 \
-  -v /srv/media:/media:ro \
-  -v mythos-data:/var/lib/mythos \
-  ghcr.io/dark-spar/mythos:latest</code></pre>
-    </article>
-    <article class="cli-card">
-      <h3><code>binary</code></h3>
-      <p>Static, single-file binaries for Linux, macOS, and Windows. No runtime, no dependencies.</p>
-      <pre><code>curl -sSL https://mythos.darkspar.com/install.sh | sh
-mythos --config /etc/mythos/config.toml</code></pre>
-    </article>
-    <article class="cli-card">
-      <h3><code>cargo</code></h3>
-      <p>Build from source. You'll need Rust 1.95 or newer.</p>
+      <h3><code>cargo run</code></h3>
+      <p>One command builds the SPA (via <code>pnpm build</code>) and the Rust binary, then boots the server on <code>127.0.0.1:8080</code>.</p>
       <pre><code>git clone https://gitlab.com/darkspar/mythos
 cd mythos
-cargo build --release
-./target/release/mythos-server</code></pre>
+cargo run --release --bin mythos-server</code></pre>
     </article>
     <article class="cli-card">
-      <h3><code>packages</code></h3>
-      <p>Native packages for common distros — Arch (<code>yay -S mythos</code>), Debian/Ubuntu <code>.deb</code>, Homebrew, and a NixOS flake with module.</p>
-      <pre><code>brew install dark-spar/tap/mythos
-mythos --config ~/.config/mythos/config.toml</code></pre>
+      <h3><code>prerequisites</code></h3>
+      <p>The build needs a working Rust toolchain, Node + pnpm for the SPA, and <code>ffmpeg</code>/<code>ffprobe</code> on PATH for scans and transcodes.</p>
+      <pre><code>rustup 1.95+
+node 22+
+pnpm 10+
+ffmpeg / ffprobe</code></pre>
+    </article>
+    <article class="cli-card">
+      <h3><code>iterate</code></h3>
+      <p>Skip the SPA build when you're only touching Rust. Run the Vite dev server when you're only touching the UI.</p>
+      <pre><code>MYTHOS_SKIP_WEB_BUILD=1 \
+  cargo run --bin mythos-server
+
+cd web &amp;&amp; pnpm dev</code></pre>
+    </article>
+    <article class="cli-card">
+      <h3><code>configure</code></h3>
+      <p>Defaults work out of the box. Override via <code>./mythos.toml</code> or any <code>MYTHOS_*</code> env var — env wins.</p>
+      <pre><code>listen     = "0.0.0.0:8080"
+data_dir   = "/var/lib/mythos"
+log_filter = "info,mythos=debug"</code></pre>
     </article>
   </div>
 </section>
 
 <section class="container section section-cta">
   <div class="cta">
-    <h2 class="cta-title">The hearth is ready.</h2>
-    <p class="cta-lede">Pull up a chair. Mythos is small, fast, and quiet — and it's yours. The quickstart walks through dependencies and your first scan in under ten minutes.</p>
+    <h2 class="cta-title">Early, but real.</h2>
+    <p class="cta-lede">Mythos streams movies with hardware-accelerated transcoding today. The roadmap is public, the source is MIT, and the binary is one <code>cargo build</code> away.</p>
     <div class="cta-actions">
-      <a class="btn btn-primary" href="{{ "/docs/getting-started/" | relURL }}">Quickstart <span aria-hidden="true">→</span></a>
+      <a class="btn btn-primary" href="{{ "/docs/getting-started/" | relURL }}">Getting started <span aria-hidden="true">→</span></a>
       <a class="btn btn-ghost" href="{{ site.Params.gitlab }}" target="_blank" rel="noopener">View on GitLab</a>
     </div>
   </div>

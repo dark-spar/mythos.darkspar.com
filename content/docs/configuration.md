@@ -1,77 +1,60 @@
 ---
 title: "Configuration"
-description: "Every knob in config.toml."
+description: "The mythos.toml keys and MYTHOS_* env vars that actually exist."
 weight: 20
 ---
 
-Mythos reads its configuration from <code>config.toml</code>. Every setting also has an environment-variable equivalent, prefixed with <code>MYTHOS_</code>, which takes precedence — useful in containerized deployments.
+Mythos loads configuration via [`figment`](https://github.com/SergioBenitez/Figment),
+merging three sources in this order — later sources win:
+
+1. Built-in defaults.
+2. A TOML file at `MYTHOS_CONFIG`, or `./mythos.toml` if present.
+3. `MYTHOS_*` environment variables.
 
 ## A minimal config
 
 ```toml
-[server]
-host = "0.0.0.0"
-port = 7878
-
-[database]
-url = "sqlite:///var/lib/mythos/mythos.db"
-
-[[libraries]]
-name = "Films"
-path = "/media/films"
-kind = "movies"
-
-[[libraries]]
-name = "Shows"
-path = "/media/shows"
-kind = "tv"
+listen     = "0.0.0.0:8080"
+data_dir   = "/var/lib/mythos"
+log_filter = "info,mythos=debug,sqlx=warn"
 ```
 
-## Server
+## Keys
+
+All keys live at the top level — there are no sections.
 
 | Key | Default | Description |
 |---|---|---|
-| `host` | `0.0.0.0` | Address to bind |
-| `port` | `7878` | TCP port |
-| `data_dir` | `/var/lib/mythos` | Where Mythos stores its state |
-| `tls.cert` | _(none)_ | Path to a TLS certificate. Enables HTTPS. |
-| `tls.key` | _(none)_ | Path to the private key |
+| `listen` | `127.0.0.1:8080` | Socket address the HTTP server binds to. |
+| `data_dir` | `./data` | Where Mythos stores the SQLite DB, posters, transcode segments, subtitles, and the JWT secret. |
+| `log_filter` | `info,mythos=debug,sqlx=warn` | `tracing-subscriber` env-filter directive. |
+| `cookie_secure` | `true` in release, `false` in debug | Sets the `Secure` flag on auth cookies. Override to `false` if you terminate TLS upstream. |
+| `token_ttl_days` | `30` | Lifetime of issued JWTs, in days. |
+| `tmdb_api_key` | _(none)_ | TMDb v3 API key. Without one, metadata enrichment is disabled — scans still index files. Also settable from the admin UI at runtime; `MYTHOS_TMDB_API_KEY` wins over the admin-UI value. Saves swap the live `TmdbHandle`, so a new key takes effect on the next scan without a restart. |
 
-## Database
+## Environment variables
 
-Mythos uses SQLite by default — fast, transactional, and zero-administration for home use. PostgreSQL is supported for households that want shared deployments.
+Any TOML key has a `MYTHOS_*` upper-snake-case env-var equivalent that takes
+precedence over the file. The non-TOML env vars are:
 
-```toml
-[database]
-url = "sqlite:///var/lib/mythos/mythos.db"
-# or
-url = "postgres://mythos:secret@localhost/mythos"
-```
+| Var | Description |
+|---|---|
+| `MYTHOS_CONFIG` | Path to the TOML file, if not `./mythos.toml`. |
+| `MYTHOS_JWT_SECRET` | Base64-encoded JWT signing key, ≥32 bytes. If unset, Mythos generates one and persists it to `{data_dir}/jwt.secret`. |
+| `MYTHOS_HW_ENCODER` | One of `auto` (default), `cpu`, `nvenc`, `qsv`, `vaapi`, `videotoolbox`. Pins a specific encoder; `auto` smoke-tests in priority order. |
+| `MYTHOS_TMDB_API_KEY` | Same as `tmdb_api_key` in the TOML file. |
+| `MYTHOS_SKIP_WEB_BUILD` | Build-time only: skips `pnpm build` so `cargo` doesn't rebuild the SPA. |
 
-## Libraries
+## Where state lives
 
-Each library is a top-level collection of media. You can mix kinds — movies, tv, music, photos — across as many libraries as you like.
+`data_dir` ends up holding:
 
-```toml
-[[libraries]]
-name = "Films"
-path = "/media/films"
-kind = "movies"
-metadata = ["tmdb", "local-nfo"]
+- `mythos.db` — SQLite, schema managed by `sqlx::migrate!`.
+- `posters/` — proxied TMDb art so clients never hit TMDb directly.
+- `transcode/` — HLS segments during active sessions; torn down when the
+  player goes away.
+- `subtitles/` — extracted text subs (WebVTT) and burn-in artifacts.
+- `jwt.secret` — auto-generated 32-byte signing key, atomic-written on first
+  boot.
 
-[[libraries]]
-name = "Family Photos"
-path = "/media/photos"
-kind = "photos"
-```
-
-## Transcoding
-
-```toml
-[transcoding]
-hardware = "auto"      # one of: auto, vaapi, qsv, nvenc, videotoolbox, none
-threads = 0            # 0 = use all cores
-segment_duration = 6   # seconds per HLS segment
-```
-
-Mythos auto-detects the best hardware encoder available. Set <code>hardware = "none"</code> if you'd rather stick to CPU encoding.
+There is no separate database section — SQLite is the only supported backend.
