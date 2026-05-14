@@ -37,7 +37,7 @@ Binaries are signed and reproducible. Verify the checksum from the release page.
 You'll need Rust 1.95 or newer.
 
 ```sh
-git clone https://github.com/dark-spar/mythos
+git clone https://gitlab.com/darkspar/mythos
 cd mythos
 cargo build --release
 ./target/release/mythos-server
@@ -48,7 +48,7 @@ cargo build --release
 Native packages for common Linux distributions and homebrew. Pick yours below.
 
 - **Arch Linux** — <code>yay -S mythos</code>
-- **Debian / Ubuntu** — `.deb` on the [releases page](https://github.com/dark-spar/mythos/releases)
+- **Debian / Ubuntu** — `.deb` on the [releases page](https://gitlab.com/darkspar/mythos/-/releases)
 - **macOS** — <code>brew install dark-spar/tap/mythos</code>
 - **NixOS** — flake on the repo, module included
 

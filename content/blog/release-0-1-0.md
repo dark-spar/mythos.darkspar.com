@@ -24,4 +24,4 @@ The first cut is here. It's small and a little rough around the edges, but it st
 
 We're already on 0.2. The headline change is **collaborative watch sessions** — the ability for two screens in two homes to play the same film, in sync, with a shared chat. We've wanted it for a long time. It's nearly ready.
 
-Get the release on the [download page](/download/), or read the source on [GitHub](https://github.com/dark-spar/mythos).
+Get the release on the [download page](/download/), or read the source on [GitLab](https://gitlab.com/darkspar/mythos).
