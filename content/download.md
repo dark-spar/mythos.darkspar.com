@@ -26,7 +26,7 @@ Then open <code>http://localhost:7878</code> and walk through the first-run setu
 Static, single-file binaries for Linux, macOS, and Windows. No runtime, no dependencies.
 
 ```sh
-curl -sSL https://mythos.app/install.sh | sh
+curl -sSL https://mythos.darkspar.com/install.sh | sh
 mythos --config /etc/mythos/config.toml
 ```
 
