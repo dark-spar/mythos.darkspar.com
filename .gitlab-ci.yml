@@ -1,0 +1,21 @@
+image: hugomods/hugo:exts-0.161.1
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  HUGO_ENVIRONMENT: production
+  HUGO_CACHEDIR: $CI_PROJECT_DIR/.hugo_cache
+
+pages:
+  stage: deploy
+  script:
+    - hugo --gc --minify --baseURL "$CI_PAGES_URL/"
+  pages: true
+  artifacts:
+    paths:
+      - public
+  cache:
+    key: hugo-cache
+    paths:
+      - .hugo_cache/
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_SERVER_HOST == "gitlab.com"
