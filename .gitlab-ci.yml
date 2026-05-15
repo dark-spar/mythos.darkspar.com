@@ -8,7 +8,7 @@ variables:
 pages:
   stage: deploy
   script:
-    - hugo --gc --minify --baseURL "$CI_PAGES_URL/"
+    - hugo --gc --minify
   pages: true
   artifacts:
     paths:
