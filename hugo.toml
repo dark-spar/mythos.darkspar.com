@@ -13,7 +13,7 @@ defaultContentLanguage = "en"
     weight = 1
 
 [params]
-  description = "A self-hosted media server in Rust. Single binary, embedded SvelteKit UI, SQLite, HLS transcoding with hardware acceleration. Early development."
+  description = "A self-hosted media server in Rust. Single binary, embedded SvelteKit UI, SQLite, HLS transcoding with hardware acceleration and HDR→SDR tonemapping. Movies and TV today; music, photos, books next."
   tagline = "Your stories, your hearth."
   author = "Matt Moore"
   gitlab = "https://gitlab.com/darkspar/mythos"
@@ -23,7 +23,7 @@ defaultContentLanguage = "en"
 [params.hero]
   eyebrow = "Rust · MIT · early development"
   heading = "A self-hosted media server in Rust."
-  subheading = "Mythos is a single-binary media server with an embedded SvelteKit UI. It scans your library, enriches metadata from TMDb, streams direct-play when it can and hardware-accelerated HLS when it can't."
+  subheading = "Mythos is a single-binary media server with an embedded SvelteKit UI. It scans your library, enriches metadata from TMDb, streams direct-play when it can and hardware-accelerated HLS — with HDR→SDR tonemapping — when it can't. Movies and TV are wired up today."
 
 [markup]
   [markup.highlight]

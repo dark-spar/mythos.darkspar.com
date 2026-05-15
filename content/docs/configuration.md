@@ -42,8 +42,22 @@ precedence over the file. The non-TOML env vars are:
 | `MYTHOS_CONFIG` | Path to the TOML file, if not `./mythos.toml`. |
 | `MYTHOS_JWT_SECRET` | Base64-encoded JWT signing key, ≥32 bytes. If unset, Mythos generates one and persists it to `{data_dir}/jwt.secret`. |
 | `MYTHOS_HW_ENCODER` | One of `auto` (default), `cpu`, `nvenc`, `qsv`, `vaapi`, `videotoolbox`. Pins a specific encoder; `auto` smoke-tests in priority order. |
+| `MYTHOS_FFMPEG_BIN` | Path or name of the `ffmpeg` binary to invoke (default: `ffmpeg` on PATH). Useful for pinning a custom build with the encoders or tonemap filters you need. |
+| `MYTHOS_FFPROBE_BIN` | Path or name of the `ffprobe` binary to invoke (default: `ffprobe` on PATH). |
 | `MYTHOS_TMDB_API_KEY` | Same as `tmdb_api_key` in the TOML file. |
 | `MYTHOS_SKIP_WEB_BUILD` | Build-time only: skips `pnpm build` so `cargo` doesn't rebuild the SPA. |
+
+## Runtime settings (admin UI)
+
+A handful of settings live in the `settings` table and are edited from
+the admin UI rather than the TOML file — they take effect on the next
+scan or transcode without a restart:
+
+| Setting | Description |
+|---|---|
+| TMDb API key | Same value as `tmdb_api_key` / `MYTHOS_TMDB_API_KEY`. The env var wins if set. A save here swaps the live `TmdbHandle` so new keys apply on the next scan without a restart. |
+| Tonemap pipeline | Which filter graph to apply for HDR→SDR: `software`, `vaapi`, `opencl`, or `cuda`. Pipelines whose ffmpeg filter isn't compiled in fall back to `software`. |
+| Tonemap algorithm | `hable` (default), `mobius`, `reinhard`, or `bt2390`. Honored by the software / OpenCL / CUDA pipelines; the VAAPI pipeline ignores it (the filter doesn't expose an algorithm knob). |
 
 ## Where state lives
 

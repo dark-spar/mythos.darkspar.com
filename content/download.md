@@ -45,10 +45,12 @@ CPU with `MYTHOS_HW_ENCODER=cpu`.
 
 ## Status
 
-What works today: movies — scan, browse, direct-play, HLS transcoding with
-hardware acceleration, multi-rendition ABR, subtitle burn-in and WebVTT
-sidecars, TMDb metadata enrichment.
+What works today: movies and TV — scan, browse, direct-play, HLS transcoding
+with hardware acceleration (NVENC stays on the GPU end-to-end), multi-rendition
+ABR, HDR→SDR tonemapping with a configurable filter pipeline, subtitle burn-in
+and WebVTT sidecars, TMDb metadata enrichment, continue-watching across movies
+and episodes, auto-play-next.
 
-What's next: TV, music, photos, books (Phase 3), and a Jellyfin-API
-compatibility shim (Phase 6) for existing clients like Findroid and Swiftfin.
-See the [roadmap on the homepage](/#status).
+What's next: the remaining Phase 3 media types — music, photos, books —
+and a Jellyfin-API compatibility shim (Phase 6) for existing clients like
+Findroid and Swiftfin. See the [roadmap on the homepage](/#status).

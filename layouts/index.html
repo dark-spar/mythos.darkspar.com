@@ -11,8 +11,9 @@
     <p class="hero-lede">
       <strong>Mythos</strong> is a single-binary media server with an embedded
       <em>SvelteKit</em> UI. It scans your library, enriches metadata from TMDb,
-      and streams direct-play when it can — hardware-accelerated HLS when it can't.
-      Movies today; TV, music, photos, and books are scheduled.
+      and streams direct-play when it can — hardware-accelerated HLS, with
+      HDR→SDR tonemapping, when it can't. Movies and TV today; music, photos,
+      and books are next.
     </p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="{{ "/docs/getting-started/" | relURL }}">Get started <span aria-hidden="true">→</span></a>
@@ -27,8 +28,9 @@
       </div>
       <pre class="terminal-body"><code><span class="t-prompt">$</span> <span class="t-cmd">cargo run</span> --release --bin mythos-server
 <span class="t-muted">┃</span> config       <span class="t-ok">✓</span> listen=0.0.0.0:8080 · data_dir=./data
-<span class="t-muted">┃</span> migrate      <span class="t-ok">✓</span> 7 migrations applied · sqlite ./data/mythos.db
-<span class="t-muted">┃</span> hwaccel      <span class="t-ok">✓</span> probe ffmpeg · vaapi smoke-test passed
+<span class="t-muted">┃</span> migrate      <span class="t-ok">✓</span> 9 migrations applied · sqlite ./data/mythos.db
+<span class="t-muted">┃</span> hwaccel      <span class="t-ok">✓</span> probe ffmpeg · nvenc + nvdec + scale_cuda
+<span class="t-muted">┃</span> tonemap      <span class="t-ok">✓</span> filters available · software · cuda
 <span class="t-muted">┃</span> jwt          <span class="t-ok">✓</span> loaded ./data/jwt.secret · 32 bytes
 <span class="t-muted">┃</span> embed        <span class="t-ok">✓</span> spa from rust-embed · 142 assets
 <span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> serving http://0.0.0.0:8080
@@ -42,27 +44,27 @@
     <p class="eyebrow">How it fits together</p>
     <h2 class="section-title">Scan, enrich, stream — one binary.</h2>
   </header>
-  <pre class="pipeline" aria-label="Pipeline diagram"><code>library root ──┬─→ jwalk + ffprobe ──→ media_files + movies (SQLite) ───┐
-               │                                                        │
-               └─→ TMDb enrichment ──→ titles · posters · overviews ────┤
-                                                                        ▼
-                                                            axum HTTP API
-                                                  (auth, library, movie, play, hls)
-                                                                        │
-                                                          ┌─────────────┴─────────────┐
-                                                          ▼                           ▼
-                                                  direct play                  HLS transcode
-                                                 (byte ranges)        (ffmpeg + NVENC/QSV/VAAPI/VT)
-                                                          │                           │
-                                                          └─────────────┬─────────────┘
-                                                                        ▼
-                                                    Vidstack + hls.js in the SPA</code></pre>
+  <pre class="pipeline" aria-label="Pipeline diagram"><code>library root ──┬─→ jwalk + ffprobe ──→ media_files + movies / series-seasons-episodes ─┐
+               │                                                                       │
+               └─→ TMDb enrichment ──→ titles · posters · stills · overviews ──────────┤
+                                                                                       ▼
+                                                                           axum HTTP API
+                                                          (auth, library, movie, series, episode, play, hls)
+                                                                                       │
+                                                                  ┌────────────────────┴────────────────────┐
+                                                                  ▼                                         ▼
+                                                          direct play                              HLS transcode
+                                                         (byte ranges)              (ffmpeg + NVENC/QSV/VAAPI/VT + HDR→SDR tonemap)
+                                                                  │                                         │
+                                                                  └────────────────────┬────────────────────┘
+                                                                                       ▼
+                                                                     Vidstack + hls.js in the SPA</code></pre>
 </section>
 
 <section id="features" class="container section">
   <header class="section-head">
     <p class="eyebrow">What works today</p>
-    <h2 class="section-title">Six things Mythos already does.</h2>
+    <h2 class="section-title">Eight things Mythos already does.</h2>
   </header>
   <ol class="features">
     <li class="feature">
@@ -73,27 +75,37 @@
     <li class="feature">
       <span class="feature-num">02</span>
       <h3 class="feature-title">Library scan + TMDb enrichment.</h3>
-      <p>Parallel filesystem walk via <code>jwalk</code>, technical metadata via <code>ffprobe</code>, titles and posters from TMDb. Posters are proxied locally so clients never hit TMDb directly.</p>
+      <p>Parallel filesystem walk via <code>jwalk</code>, technical metadata via <code>ffprobe</code>, titles and posters from TMDb — for both movies and TV. Posters are proxied locally so clients never hit TMDb directly.</p>
     </li>
     <li class="feature">
       <span class="feature-num">03</span>
-      <h3 class="feature-title">Direct play with byte ranges.</h3>
-      <p>If your browser can decode the file, Mythos streams it raw with HTTP range requests. Resume points are debounced and persisted.</p>
+      <h3 class="feature-title">Movies and TV.</h3>
+      <p>Series → seasons → episodes are scanned, identified from <code>SxxEyy</code> / <code>1x01</code> filenames (with a season-dir fallback), enriched with TMDb episode stills, and played from a shared player component.</p>
     </li>
     <li class="feature">
       <span class="feature-num">04</span>
-      <h3 class="feature-title">HLS transcoding when needed.</h3>
-      <p>For browser-incompatible codecs (HEVC, AV1, DTS, …) Mythos spawns an <code>ffmpeg</code> session, segments to HLS, and tears it down when the player goes away.</p>
+      <h3 class="feature-title">Direct play with byte ranges.</h3>
+      <p>If your browser can decode the file, Mythos streams it raw with HTTP range requests. Resume points are debounced and persisted per-user across movies and episodes.</p>
     </li>
     <li class="feature">
       <span class="feature-num">05</span>
-      <h3 class="feature-title">Hardware-accelerated, smoke-tested.</h3>
-      <p>NVENC, QSV, VAAPI, and VideoToolbox are probed and smoke-tested at startup, so a build with the encoder compiled in but a missing driver falls back to CPU cleanly.</p>
+      <h3 class="feature-title">HLS transcoding when needed.</h3>
+      <p>For browser-incompatible codecs (HEVC, AV1, DTS, …) Mythos spawns an <code>ffmpeg</code> session, segments to HLS, and tears it down when the player goes away. Multi-rendition ABR lets <code>hls.js</code> pick the bitrate.</p>
     </li>
     <li class="feature">
       <span class="feature-num">06</span>
+      <h3 class="feature-title">Hardware-accelerated, end-to-end.</h3>
+      <p>NVENC, QSV, VAAPI, and VideoToolbox are probed and smoke-tested at startup. The NVENC path stays on the GPU end-to-end (<code>NVDEC</code> + <code>scale_cuda</code>), and a build with the encoder compiled in but a missing driver falls back to CPU cleanly.</p>
+    </li>
+    <li class="feature">
+      <span class="feature-num">07</span>
+      <h3 class="feature-title">HDR→SDR tonemapping.</h3>
+      <p>4K HEVC HDR sources are tonemapped on the way out via a configurable pipeline — software, VAAPI, OpenCL, or CUDA — picked from filters Mythos probes for at startup. Hable / Mobius / Reinhard / BT.2390 algorithms; admin-editable from the settings UI.</p>
+    </li>
+    <li class="feature">
+      <span class="feature-num">08</span>
       <h3 class="feature-title">Subtitles done right.</h3>
-      <p>Text subtitles ride along as WebVTT sidecars. Image subtitles (PGS/VobSub) burn in during transcode so they survive every device.</p>
+      <p>Text subtitles ride along as WebVTT sidecars. Image subtitles (PGS/VobSub) burn in during transcode so they survive every device. Continue-watching and auto-play-next stitch episodes together across the library.</p>
     </li>
   </ol>
 </section>
@@ -105,20 +117,20 @@
   </header>
   <div class="cli-grid">
     <article class="cli-card">
-      <h3><code>phase 0 — 1</code></h3>
-      <p><strong>Done (movies-only slice).</strong> Workspace, embedded SPA, axum boot, SQLite + migrations, argon2id + HS256 JWTs (cookie or Bearer), libraries CRUD, movies scanner + browse UI, TMDb enrichment with an admin-editable key.</p>
-    </article>
-    <article class="cli-card">
-      <h3><code>phase 2</code></h3>
-      <p><strong>Done.</strong> Direct-play streaming with byte-range support, Vidstack source binding, debounced watch progress, resume.</p>
+      <h3><code>phase 0 — 2</code></h3>
+      <p><strong>Done.</strong> Workspace, embedded SPA, axum boot, SQLite + migrations, argon2id + HS256 JWTs (cookie or Bearer), libraries CRUD, movies scanner + browse UI, TMDb enrichment with an admin-editable key, direct-play streaming with byte ranges, debounced watch progress, resume.</p>
     </article>
     <article class="cli-card">
       <h3><code>phase 4 — 5</code></h3>
-      <p><strong>Done.</strong> Phase 4 ships HLS transcoding for incompatible media. Phase 5 lights up hardware acceleration (NVENC / QSV / VAAPI / VT), multi-rendition ABR, subtitle burn-in, and client-declared device profiles.</p>
+      <p><strong>Done.</strong> Phase 4 ships HLS transcoding for incompatible media. Phase 5 lights up hardware acceleration (NVENC / QSV / VAAPI / VT), multi-rendition ABR, subtitle burn-in, client-declared device profiles, and HDR→SDR tonemapping with a configurable filter pipeline.</p>
     </article>
     <article class="cli-card cli-card-feature">
-      <h3><code>phase 3 + 6</code></h3>
-      <p><strong>Next.</strong> Phase 3 brings TV series, music, photos, and books. Phase 6 adds a Jellyfin-API-compatible shim so existing clients (Findroid, Swiftfin, jellyfin-web) work against Mythos.</p>
+      <h3><code>phase 3</code></h3>
+      <p><strong>In progress.</strong> Phase 3a + 3c shipped: TV schema, scanner, TMDb enrichment, browse UI, and episode playback. Continue-watching aggregates movies + episodes, and auto-play-next stitches episodes together. Music, photos, and books are the remaining sub-phases.</p>
+    </article>
+    <article class="cli-card">
+      <h3><code>phase 6</code></h3>
+      <p><strong>Next.</strong> A Jellyfin-API-compatible shim at <code>/jellyfin/*</code> so existing clients (Findroid, Swiftfin, jellyfin-web) work against Mythos without changes.</p>
     </article>
   </div>
 </section>
@@ -165,7 +177,7 @@ log_filter = "info,mythos=debug"</code></pre>
 <section class="container section section-cta">
   <div class="cta">
     <h2 class="cta-title">Early, but real.</h2>
-    <p class="cta-lede">Mythos streams movies with hardware-accelerated transcoding today. The roadmap is public, the source is MIT, and the binary is one <code>cargo build</code> away.</p>
+    <p class="cta-lede">Mythos streams movies and TV with hardware-accelerated transcoding and HDR tonemapping today. The roadmap is public, the source is MIT, and the binary is one <code>cargo build</code> away.</p>
     <div class="cta-actions">
       <a class="btn btn-primary" href="{{ "/docs/getting-started/" | relURL }}">Getting started <span aria-hidden="true">→</span></a>
       <a class="btn btn-ghost" href="{{ site.Params.gitlab }}" target="_blank" rel="noopener">View on GitLab</a>

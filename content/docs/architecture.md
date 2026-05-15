@@ -15,10 +15,10 @@ Mythos is a Cargo workspace. Each crate has one responsibility; the
 | `mythos-core` | Shared domain types (`MediaItem`, `MediaKind`, …). |
 | `mythos-db` | SQLite pool + `sqlx::migrate!` runner. Re-exports `SqlitePool`. |
 | `mythos-auth` | argon2id password hashing, HS256 JWT issuance, `AuthUser` / `AdminUser` extractors. Errors deliberately don't implement `IntoResponse` — translation to HTTP lives in `mythos-api` so the crate stays usable from non-HTTP contexts. |
-| `mythos-api` | `axum` routers and handlers: `auth`, `library`, `movie`, `scan`, `play`, `hls`, `subtitles`, `settings`. |
-| `mythos-scan` | Filesystem walker (`jwalk`) and `ffprobe` driver. |
-| `mythos-meta` | TMDb client with an on-disk poster cache. MusicBrainz / OpenLibrary land in Phase 3. |
-| `mythos-stream` | Direct-play byte-range responses, FFmpeg HLS transcoder, ABR ladder, hardware-encoder probe, subtitle burn-in. |
+| `mythos-api` | `axum` routers and handlers: `auth`, `library`, `movie`, `series`, `episode`, `scan`, `play`, `hls`, `subtitles`, `settings`. |
+| `mythos-scan` | Filesystem walker (`jwalk`) and `ffprobe` driver. Movie and TV branches share the walk; the TV branch parses `SxxEyy` / `1x01` with a season-dir fallback. |
+| `mythos-meta` | TMDb client with an on-disk poster cache. Handles movies, TV series, seasons, and episode stills. MusicBrainz / OpenLibrary land later in Phase 3. |
+| `mythos-stream` | Direct-play byte-range responses, FFmpeg HLS transcoder, ABR ladder, hardware-encoder probe, subtitle burn-in, HDR→SDR tonemapping pipeline. Movies and episodes share the streaming surface via a `SessionKey { user_id, item_id, kind }` so their transcode sessions can't collide. |
 
 Workspace dependencies live at the root `Cargo.toml` under
 `[workspace.dependencies]`; member crates pull them with `dep.workspace = true`.
@@ -43,18 +43,25 @@ SQLite is the only backend. The schema is migration-managed (`migrations/`)
 and small enough to inspect by hand. Posters, transcode segments, and
 extracted subtitles live on disk under `data_dir`.
 
-The current schema (migrations 0001–0007):
+The current schema (migrations 0001–0009):
 
 - `users` — argon2id hashes, `token_version` for forced logout.
 - `libraries` — root paths the scanner walks.
-- `media_files` — one row per file on disk, with `ffprobe` columns.
+- `media_files` — one row per file on disk, with `ffprobe` columns and
+  `color_primaries` / `color_transfer` / `color_space` for HDR detection.
 - `movies` — one row per identified movie, pointing at a `media_files` row.
-- `movie_progress` — debounced watch position per user.
+- `series` → `seasons` → `episodes` — TV identity. Each `episodes` row FKs
+  1:1 to a `media_files` row, mirroring how `movies` does, so subtitles,
+  byte-range streaming, and HLS transcoding work for episodes without
+  any branch in the streaming code.
+- `movie_progress` / `episode_progress` — debounced watch position per
+  user, per kind.
 - `media_subtitles` — extracted text subs + image-sub render artifacts.
-- `settings` — runtime-configurable settings (TMDb key, etc.).
+- `settings` — runtime-configurable settings (TMDb key, tonemap pipeline
+  + algorithm, etc.).
 
-Tables for episodes, series, tracks, albums, artists, photos, and books
-**don't exist yet** — they ship in Phase 3 alongside their scanners.
+Tables for tracks, albums, artists, photos, and books **don't exist
+yet** — they ship later in Phase 3 alongside their scanners.
 
 IDs are UUID v7, stored as `TEXT`. Timestamps are ISO-8601 UTC strings.
 
@@ -91,7 +98,23 @@ Two paths converge at the player:
 The HLS pipeline supports multi-rendition ABR. Hardware encoders are probed
 and smoke-tested at startup — a build with NVENC compiled in but no working
 driver falls back cleanly. Priority order is NVENC → QSV → VAAPI →
-VideoToolbox → libx264.
+VideoToolbox → libx264. The NVENC path stays on the GPU end-to-end via
+`NVDEC` + `scale_cuda` so the frame never round-trips through system RAM.
+
+### HDR → SDR tonemapping
+
+For HDR sources, Mythos applies an explicit tonemap filter in the
+transcode graph before encoding. The choice of *filter pipeline*
+(software / VAAPI / OpenCL / CUDA) and *algorithm*
+(Hable / Mobius / Reinhard / BT.2390) is admin-configurable from the
+settings UI and persisted in the `settings` table. Mythos probes
+`ffmpeg` at startup for the tonemap filters it actually has compiled
+in, and pipelines whose filter isn't present silently fall back to
+software so a missing build feature can't break playback. Source HDR
+detection uses the `color_primaries` / `color_transfer` / `color_space`
+columns on `media_files`; if those are still `NULL` (a library scanned
+before migration 0009), the first HDR play self-heals them by
+ffprobing on demand.
 
 ## Why Rust
 
