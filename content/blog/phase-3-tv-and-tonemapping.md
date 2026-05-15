@@ -9,7 +9,7 @@ Two strands of work just landed in `main`. The first kicks Phase 3 off
 with TV; the second closes a gap that was always going to bite as soon
 as people pointed a 4K HDR file at the server.
 
-## TV — Phase 3a and 3c
+## TV — Phase 3a, 3c, 3d
 
 Mythos now scans, identifies, enriches, and plays TV episodes.
 
@@ -32,9 +32,12 @@ Mythos now scans, identifies, enriches, and plays TV episodes.
   keeps movie and episode transcode sessions from colliding. The
   `/movie/[id]` and `/episodes/[id]` pages both render a shared
   `Player.svelte`.
-- **Stitching.** Continue-watching aggregates progress across movies
-  and episodes. At the end of an episode the player auto-plays the
-  next one (or, after a navigation, auto-starts on arrival).
+- **Stitching (Phase 3d).** A `GET /api/users/me/continue-watching`
+  endpoint aggregates progress across movies and episodes. At the end
+  of an episode the player shows an auto-play-next countdown card and
+  navigates to the next episode with `state: { autoplay: true }`, so
+  consecutive episodes play seamlessly while "click thumbnail = paused"
+  stays the default for manual navigation.
 
 Music, photos, and books are the remaining Phase 3 sub-phases.
 
