@@ -56,7 +56,7 @@ scan or transcode without a restart:
 | Setting | Description |
 |---|---|
 | TMDb API key | Same value as `tmdb_api_key` / `MYTHOS_TMDB_API_KEY`. The env var wins if set. A save here swaps the live `TmdbHandle` so new keys apply on the next scan without a restart. |
-| Tonemap pipeline | Which filter graph to apply for HDR→SDR: `software`, `tonemapx`, `vaapi`, `opencl`, or `cuda`. Pipelines whose ffmpeg filter isn't compiled in fall back to `software`. `tonemapx` is jellyfin-ffmpeg's SIMD-optimised CPU kernel — much faster than the stock `tonemap` filter on the CPU path, but only available when ffmpeg is jellyfin-ffmpeg (it ships in the Docker image; set `MYTHOS_FFMPEG_BIN=/usr/lib/jellyfin-ffmpeg/ffmpeg` on a bare-metal install). |
+| Tonemap pipeline | Which filter graph to apply for HDR→SDR: `software`, `tonemapx`, `vaapi`, `opencl`, or `cuda`. Pipelines whose ffmpeg filter isn't compiled in fall back to `software`. `tonemapx` is jellyfin-ffmpeg's SIMD-optimised CPU kernel — much faster than the stock `tonemap` filter on the CPU path, but only available when ffmpeg is jellyfin-ffmpeg (it ships in the Docker image; set `MYTHOS_FFMPEG_BIN=/usr/lib/jellyfin-ffmpeg/ffmpeg` on a bare-metal install). On Intel Gen 12+ (Iris Xe and newer) the `opencl` pipeline is broken at the NEO driver level — `cl_intel_va_api_media_sharing` is no longer advertised, so `hwmap=derive_device=opencl` returns ENOSYS. Use `tonemapx` on that hardware. |
 | Tonemap algorithm | `hable` (default), `mobius`, `reinhard`, or `bt2390`. Honored by the software / Tonemapx / OpenCL / CUDA pipelines; the VAAPI pipeline ignores it (the filter doesn't expose an algorithm knob). |
 
 ## Where state lives

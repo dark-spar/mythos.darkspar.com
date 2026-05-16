@@ -55,7 +55,13 @@ The current schema (migrations 0001–0012):
   TMDb directly (migration 0010).
 - `media_file_keyframes` — per-file keyframe index so remux-mode HLS aligns
   its segment boundaries to real IDR frames instead of best-guess
-  timestamps (migration 0011).
+  timestamps (migration 0011). Only true IDR slice NALs are recorded
+  (type 5 for H.264, types 19/20 for HEVC); CRA and BLA frames are
+  excluded because their RASL leading pictures reference frames from
+  before the boundary and would stutter when the player starts playback
+  there. Open-GOP HEVC files (most modern release groups) therefore end
+  up with empty indexes — `/play` auto-downgrades them to a full
+  transcode instead of remuxing.
 - `movies` — one row per identified movie, pointing at a `media_files` row.
 - `series` → `seasons` → `episodes` — TV identity. Each `episodes` row FKs
   1:1 to a `media_files` row, mirroring how `movies` does, so subtitles,
@@ -127,7 +133,12 @@ software so a missing build feature can't break playback.
 much faster than the stock `tonemap` filter on the CPU path, but only
 available when ffmpeg is jellyfin-ffmpeg. The Docker image already
 points `MYTHOS_FFMPEG_BIN` / `MYTHOS_FFPROBE_BIN` at it; on bare-metal
-installs set those env vars to enable the option.
+installs set those env vars to enable the option. It's also the
+practical answer on Intel Gen 12+ (Iris Xe and newer), where the
+`opencl` pipeline is broken at the NEO driver level — NEO no longer
+advertises `cl_intel_va_api_media_sharing`, so the `hwmap` step
+returns ENOSYS. The Docker image deliberately omits `intel-opencl-icd`
+for the same reason.
 
 Source HDR detection uses the `color_primaries` / `color_transfer` /
 `color_space` columns on `media_files`; if those are still `NULL` (a
