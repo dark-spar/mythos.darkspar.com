@@ -56,8 +56,8 @@ scan or transcode without a restart:
 | Setting | Description |
 |---|---|
 | TMDb API key | Same value as `tmdb_api_key` / `MYTHOS_TMDB_API_KEY`. The env var wins if set. A save here swaps the live `TmdbHandle` so new keys apply on the next scan without a restart. |
-| Tonemap pipeline | Which filter graph to apply for HDR→SDR: `software`, `vaapi`, `opencl`, or `cuda`. Pipelines whose ffmpeg filter isn't compiled in fall back to `software`. |
-| Tonemap algorithm | `hable` (default), `mobius`, `reinhard`, or `bt2390`. Honored by the software / OpenCL / CUDA pipelines; the VAAPI pipeline ignores it (the filter doesn't expose an algorithm knob). |
+| Tonemap pipeline | Which filter graph to apply for HDR→SDR: `software`, `tonemapx`, `vaapi`, `opencl`, or `cuda`. Pipelines whose ffmpeg filter isn't compiled in fall back to `software`. `tonemapx` is jellyfin-ffmpeg's SIMD-optimised CPU kernel — much faster than the stock `tonemap` filter on the CPU path, but only available when ffmpeg is jellyfin-ffmpeg (it ships in the Docker image; set `MYTHOS_FFMPEG_BIN=/usr/lib/jellyfin-ffmpeg/ffmpeg` on a bare-metal install). |
+| Tonemap algorithm | `hable` (default), `mobius`, `reinhard`, or `bt2390`. Honored by the software / Tonemapx / OpenCL / CUDA pipelines; the VAAPI pipeline ignores it (the filter doesn't expose an algorithm knob). |
 
 ## Where state lives
 
@@ -72,3 +72,37 @@ scan or transcode without a restart:
   boot.
 
 There is no separate database section — SQLite is the only supported backend.
+
+## Hardware acceleration
+
+Mythos probes `ffmpeg -encoders` at startup and smoke-tests each candidate.
+Priority order is NVENC → QSV → VAAPI → VideoToolbox → libx264. Pin a
+specific encoder with `MYTHOS_HW_ENCODER=vaapi` (etc.), or force CPU with
+`MYTHOS_HW_ENCODER=cpu`.
+
+For container deployments:
+
+```sh
+# VAAPI / QSV — pass the render node through
+docker run ... --device /dev/dri:/dev/dri darkspar/mythos-server:edge
+
+# NVENC — NVIDIA container runtime
+docker run ... --gpus all darkspar/mythos-server:edge
+```
+
+## Docker image defaults
+
+The published image (`darkspar/mythos-server:edge`) sets a few env vars so
+the container does the right thing out of the box:
+
+| Variable | Default in the image | Note |
+|---|---|---|
+| `MYTHOS_LISTEN` | `0.0.0.0:8080` | |
+| `MYTHOS_DATA_DIR` | `/data` | The single writable volume — bind-mount it. |
+| `MYTHOS_FFMPEG_BIN` | `/usr/lib/jellyfin-ffmpeg/ffmpeg` | The image ships `jellyfin-ffmpeg7`. |
+| `MYTHOS_FFPROBE_BIN` | `/usr/lib/jellyfin-ffmpeg/ffprobe` | Same. |
+
+On a bare-metal install set `MYTHOS_FFMPEG_BIN` / `MYTHOS_FFPROBE_BIN`
+yourself if you'd rather not put `jellyfin-ffmpeg` on PATH — the HW tonemap
+filters (`tonemap_vaapi` / `tonemap_opencl` / `tonemap_cuda`) and the
+`tonemapx` SIMD CPU kernel are jellyfin-ffmpeg-only on most distros.

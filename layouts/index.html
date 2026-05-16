@@ -30,7 +30,7 @@
 <span class="t-muted">┃</span> config       <span class="t-ok">✓</span> listen=0.0.0.0:8080 · data_dir=./data
 <span class="t-muted">┃</span> migrate      <span class="t-ok">✓</span> 9 migrations applied · sqlite ./data/mythos.db
 <span class="t-muted">┃</span> hwaccel      <span class="t-ok">✓</span> probe ffmpeg · nvenc + nvdec + scale_cuda
-<span class="t-muted">┃</span> tonemap      <span class="t-ok">✓</span> filters available · software · cuda
+<span class="t-muted">┃</span> tonemap      <span class="t-ok">✓</span> filters available · software · tonemapx · cuda
 <span class="t-muted">┃</span> jwt          <span class="t-ok">✓</span> loaded ./data/jwt.secret · 32 bytes
 <span class="t-muted">┃</span> embed        <span class="t-ok">✓</span> spa from rust-embed · 142 assets
 <span class="t-muted">┃</span> ready        <span class="t-warn">⏵</span> serving http://0.0.0.0:8080
@@ -58,13 +58,13 @@
                                                                   │                                         │
                                                                   └────────────────────┬────────────────────┘
                                                                                        ▼
-                                                                     Vidstack + hls.js in the SPA</code></pre>
+                                                                  media-chrome + hls.js in the SPA</code></pre>
 </section>
 
 <section id="features" class="container section">
   <header class="section-head">
     <p class="eyebrow">What works today</p>
-    <h2 class="section-title">Eight things Mythos already does.</h2>
+    <h2 class="section-title">Nine things Mythos already does.</h2>
   </header>
   <ol class="features">
     <li class="feature">
@@ -105,7 +105,12 @@
     <li class="feature">
       <span class="feature-num">08</span>
       <h3 class="feature-title">Subtitles done right.</h3>
-      <p>Text subtitles ride along as WebVTT sidecars. Image subtitles (PGS/VobSub) burn in during transcode so they survive every device. Continue-watching and auto-play-next stitch episodes together across the library.</p>
+      <p>Text subtitles ride along as WebVTT sidecars — embedded streams and <code>.srt</code> files dropped next to the video (or in a sibling <code>Subs/</code> directory) are both picked up. Image subtitles (PGS/VobSub) burn in during transcode so they survive every device. Continue-watching and auto-play-next stitch episodes together across the library.</p>
+    </li>
+    <li class="feature">
+      <span class="feature-num">09</span>
+      <h3 class="feature-title">Title search across the library.</h3>
+      <p>A single search box queries movies and series together via <code>GET /api/search</code> — case-insensitive prefix match against the sort title. Results render inline with keyboard navigation (<kbd>↑</kbd>/<kbd>↓</kbd> to walk, <kbd>Enter</kbd> to open). Backed by SQLite <code>LIKE</code> today; will graduate to FTS5 once libraries get big enough to chug.</p>
     </li>
   </ol>
 </section>
@@ -126,7 +131,7 @@
     </article>
     <article class="cli-card cli-card-feature">
       <h3><code>phase 3</code></h3>
-      <p><strong>In progress.</strong> 3a — TV schema, scanner, TMDb enrichment, browse UI. 3c — episode playback sharing the movie streaming surface via a kind-aware <code>SessionKey</code>. 3d — continue-watching aggregated across movies + episodes, plus auto-play-next at episode end. Music, photos, and books are the remaining sub-phases.</p>
+      <p><strong>In progress.</strong> 3a — TV schema, scanner, TMDb enrichment, browse UI. 3c — episode playback sharing the movie streaming surface via a kind-aware <code>SessionKey</code>. 3d — continue-watching aggregated across movies + episodes, plus auto-play-next at episode end. Polish on top: title search across movies + series, sidecar <code>.srt</code> discovery, a <code>media-chrome</code>-based player, and per-file keyframe indexing for keyframe-aligned remux HLS. Music, photos, and books are the remaining sub-phases.</p>
     </article>
     <article class="cli-card">
       <h3><code>phase 6</code></h3>
@@ -138,31 +143,32 @@
 <section id="install" class="container section">
   <header class="section-head">
     <p class="eyebrow">Get started</p>
-    <h2 class="section-title">Build from source — that's the path for now.</h2>
+    <h2 class="section-title">Two install paths — a container, or the source.</h2>
   </header>
   <div class="cli-grid">
     <article class="cli-card cli-card-feature">
+      <h3><code>docker run</code></h3>
+      <p>The fastest way in. The published image bundles <code>jellyfin-ffmpeg</code> (so HW tonemap filters and the SIMD-CPU <code>tonemapx</code> kernel are available) and runs as PID&nbsp;1 under <code>tini</code>. <code>linux/amd64</code> + <code>linux/arm64</code>.</p>
+      <pre><code>docker run -d --name mythos \
+  -p 8080:8080 \
+  -v mythos-data:/data \
+  -v /path/to/media:/media:ro \
+  darkspar/mythos-server:edge</code></pre>
+    </article>
+    <article class="cli-card">
       <h3><code>cargo run</code></h3>
-      <p>One command builds the SPA (via <code>pnpm build</code>) and the Rust binary, then boots the server on <code>0.0.0.0:8080</code> — reachable from any device on your LAN.</p>
+      <p>Build from <code>main</code>. One command builds the SPA (via <code>pnpm build</code>) and the Rust binary, then boots the server on <code>0.0.0.0:8080</code> — reachable from any device on your LAN.</p>
       <pre><code>git clone https://gitlab.com/darkspar/mythos
 cd mythos
 cargo run --release --bin mythos-server</code></pre>
     </article>
     <article class="cli-card">
       <h3><code>prerequisites</code></h3>
-      <p>The build needs a working Rust toolchain, Node + pnpm for the SPA, and <code>ffmpeg</code>/<code>ffprobe</code> on PATH for scans and transcodes.</p>
+      <p>The from-source build needs a working Rust toolchain, Node + pnpm for the SPA, and <code>ffmpeg</code>/<code>ffprobe</code> on PATH for scans and transcodes.</p>
       <pre><code>rustup 1.95+
 node 22+
 pnpm 10+
 ffmpeg / ffprobe</code></pre>
-    </article>
-    <article class="cli-card">
-      <h3><code>iterate</code></h3>
-      <p>Skip the SPA build when you're only touching Rust. Run the Vite dev server when you're only touching the UI.</p>
-      <pre><code>MYTHOS_SKIP_WEB_BUILD=1 \
-  cargo run --bin mythos-server
-
-cd web &amp;&amp; pnpm dev</code></pre>
     </article>
     <article class="cli-card">
       <h3><code>configure</code></h3>

@@ -23,7 +23,9 @@ put in it.
 ├── The Princess Bride (1987)/
 │   └── The Princess Bride (1987).mkv
 ├── My Neighbor Totoro (1988)/
-│   └── My Neighbor Totoro (1988).mp4
+│   ├── My Neighbor Totoro (1988).mp4
+│   └── Subs/
+│       └── English.srt
 └── Spirited Away (2001)/
     ├── Spirited Away (2001).mkv
     └── Spirited Away (2001).en.srt
@@ -39,9 +41,21 @@ technical fields just stay `NULL` until a future re-scan fills them in.
 
 ### Sidecar files Mythos handles today
 
-| File | Purpose |
-|---|---|
-| `<basename>.srt`, `.ass`, `.vtt` | External subtitles. Text formats become WebVTT; image subs are burned in during transcode. |
+The scanner picks up `.srt` files in two layouts — both Plex/Jellyfin
+conventions, so an existing library should work without changes:
+
+- **Next to the video.** `<basename>.srt`, `<basename>.en.srt`,
+  `<basename>.en.forced.srt`, `<basename>.eng.sdh.srt` — language and flags
+  are parsed out of the trailing stem segments.
+- **In a sibling `Subs/` directory.** Both a flat layout
+  (`Subs/English.srt`, `Subs/Movie.en.srt`) and a per-language nested layout
+  (`Subs/English/2_English.srt`, `Subs/eng/track.srt`) are accepted.
+
+Other text formats (`.ass`, `.vtt`) and image formats (PGS, VobSub) are
+handled when they ride along *inside* the container — text streams are
+converted to WebVTT on demand, image streams burn in during transcode.
+Standalone `.ass` / `.vtt` sidecars aren't wired up yet; convert to `.srt`
+or mux them into the file for now.
 
 External posters, fanart, and NFO overrides are on the roadmap but not wired
 up yet — posters come from TMDb if you've set an API key, otherwise the UI
