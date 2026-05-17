@@ -39,6 +39,24 @@ container, codecs, duration, and resolution.
 Files where `ffprobe` fails or is unavailable are still indexed — the
 technical fields just stay `NULL` until a future re-scan fills them in.
 
+### When the title contains a year
+
+Some titles include a year as part of the actual name — `Blade Runner 2049`,
+`Cyberpunk 2077`, `2001: A Space Odyssey`. The identifier handles those
+two ways:
+
+- **A `(YYYY)`-bracketed year always wins.** `Blade Runner 2049 (2017)/...`
+  parses as `title="Blade Runner 2049", year=2017`, not "Blade Runner →
+  search 2049".
+- **When there's no paren form, the *last* year token in the stem is the
+  release year.** So `2001 A Space Odyssey 1968` parses as
+  `title="2001 A Space Odyssey", year=1968` rather than the other way
+  round.
+
+If the first TMDb search comes back empty, the enrichment pass retries
+*without* the year hint — which also rescues files where the year is
+genuinely a typo (`Independence Day 1966` still finds the 1996 film).
+
 ### Sidecar files Mythos handles today
 
 The scanner picks up `.srt` files in two layouts — both Plex/Jellyfin

@@ -5,20 +5,28 @@ weight: 40
 ---
 
 Mythos is a Cargo workspace. Each crate has one responsibility; the
-`mythos-server` binary wires them together with `axum`.
+`mythos-server` binary wires them together with `axum`. The repo also
+hosts a Tauri 2 desktop client under `apps/` that reuses the SvelteKit
+UI as a sibling workspace member.
 
 ## The crates
 
 | Crate | Responsibility |
 |---|---|
 | `mythos-server` | Main binary. Loads config, runs migrations, builds the `axum` app, embeds and serves the SvelteKit SPA. |
-| `mythos-core` | Shared domain types (`MediaItem`, `MediaKind`, …). |
+| `mythos-core` | Shared domain types (`MediaItem`, `MediaKind`, …) plus the `playback::{PlaybackRequest, PlaybackDecision}` wire contract that the desktop client (and the future Jellyfin shim) speak. |
 | `mythos-db` | SQLite pool + `sqlx::migrate!` runner. Re-exports `SqlitePool`. |
 | `mythos-auth` | argon2id password hashing, HS256 JWT issuance, `AuthUser` / `AdminUser` extractors. Errors deliberately don't implement `IntoResponse` — translation to HTTP lives in `mythos-api` so the crate stays usable from non-HTTP contexts. |
 | `mythos-api` | `axum` routers and handlers: `auth`, `library`, `movie`, `series`, `episode`, `scan`, `play`, `hls`, `subtitles`, `settings`, `search`. |
-| `mythos-scan` | Filesystem walker (`jwalk`) and `ffprobe` driver. Movie and TV branches share the walk; the TV branch parses `SxxEyy` / `1x01` with a season-dir fallback. |
-| `mythos-meta` | TMDb client with an on-disk poster cache. Handles movies, TV series, seasons, and episode stills. MusicBrainz / OpenLibrary land later in Phase 3. |
+| `mythos-scan` | Filesystem walker (`jwalk`) and `ffprobe` driver. Movie and TV branches share the walk; the TV branch parses `SxxEyy` / `1x01` with a season-dir fallback. Movie identification prefers `(YYYY)`-bracketed years over bare year tokens so titles like `Blade Runner 2049 (2017)` parse correctly. |
+| `mythos-meta` | TMDb client with an on-disk poster cache. Handles movies, TV series, seasons, and episode stills. The movie enrichment pass retries without the year hint when the first attempt misses, rescuing year-typo files. MusicBrainz / OpenLibrary land later in Phase 3. |
 | `mythos-stream` | Direct-play byte-range responses, FFmpeg HLS transcoder, ABR ladder, hardware-encoder probe, subtitle burn-in, HDR→SDR tonemapping pipeline. Movies and episodes share the streaming surface via a `SessionKey { user_id, item_id, kind }` so their transcode sessions can't collide. |
+
+Outside `crates/`, `apps/mythos-desktop/` is a Tauri 2 workspace member
+whose Cargo crate lives at `apps/mythos-desktop/src-tauri/`. Its UI is
+the same SvelteKit codebase as the server's embedded SPA; runtime
+backend selection (`'__TAURI_INTERNALS__' in window`) picks libmpv-via-IPC
+vs. `<video>` + hls.js at startup.
 
 Workspace dependencies live at the root `Cargo.toml` under
 `[workspace.dependencies]`; member crates pull them with `dep.workspace = true`.
@@ -153,6 +161,83 @@ that match the query. The current implementation is a case-insensitive
 to SQLite FTS5 once libraries get big enough to chug. The web client
 binds the endpoint to a single search box with keyboard navigation
 (<kbd>↑</kbd>/<kbd>↓</kbd> walks results, <kbd>Enter</kbd> opens).
+
+### Player overlay lifecycle
+
+The video player is hoisted into the root layout (`+layout.svelte`) and
+managed by a singleton `playbackSession`
+(`web/src/lib/player/session.svelte.ts`). Pages don't mount the player
+themselves — they call `playbackSession.open(...)` and a single overlay
+component decides whether to render as a fullscreen modal or as an
+88&nbsp;px mini-bar pinned to the bottom of the page.
+
+The overlay toggles between modes via a `data-mode` attribute; the same
+`<Player>` instance is rendered in both modes so the `<video>` element,
+the `media-controller`, the playback backend, and the active HLS session
+are not torn down on a mode swap. Modal-only chrome (top overlay,
+scrubber and buttons bars, subs menu, up-next countdown, info strip)
+is `{#if mode === 'modal'}`-gated; the mini chrome is a `.mini-row`
+sibling of `<media-controller>` driven by the same `backendPaused` /
+`backendPositionMs` mirrors the modal uses, so it works identically in
+browser and Tauri/mpv modes.
+
+Clicking the small video in the mini-bar calls `playbackSession.expand()`
+to restore the fullscreen modal. <kbd>Esc</kbd> on the modal minimizes
+rather than closes — the explicit X is the only true "close" action.
+
+### HLS session teardown
+
+HLS sessions are torn down via two paths that both call
+`DELETE /api/{movies,episodes}/:id/hls`:
+
+- `playbackSession.close()` and `playbackSession.open()` (with a
+  different item) fire `stopTranscodeSession` *synchronously*, so the
+  DELETE goes out the instant the user closes or swaps the player
+  rather than waiting on the overlay's fade transition.
+- The Player's `$effect` cleanup also calls `stopTranscodeSession` on
+  unmount — a safety net for paths that bypass the session (`beforeunload`
+  on page reload, manual route navigation outside the SPA router).
+
+Every new transcode entry point routes through `TranscodeManager` so
+the lifecycle stays centralized and ffmpeg subprocesses don't leak.
+
+### Desktop client (Tauri + libmpv)
+
+`apps/mythos-desktop/` is a Tauri 2 shell around the same SvelteKit
+codebase as the server's embedded SPA. The same routes, the same
+components, the same `Player.svelte` — but at runtime the playback
+layer dispatches to **libmpv via IPC** instead of `<video>` + hls.js.
+Mpv's position / paused state is mirrored back into the same Svelte
+stores the browser backend writes to, so `Player.svelte` doesn't
+branch on backend.
+
+Mpv runs as `Arc<Mpv>` in the host process; its event loop lives on a
+separate thread with its own `EventContext::new(mpv.ctx)` (the libmpv2
+test pattern, because `Mpv::event_context_mut` would need `&mut Mpv`
+which is incompatible with the `Arc<Mpv>` shared by IPC commands).
+
+Video embeds into the Tauri main window at setup time: Rust hands
+libmpv the window's raw handle (via `raw-window-handle`'s
+`WindowHandle::as_raw`) and sets mpv's `wid` property, with
+`force-window=no` so nothing pops up until the embed lands. The SPA
+reports its `<video>` bounding rect, Rust translates that to ratios
+using the Tauri window's `inner_position` / `outer_position` /
+`scale_factor`, and mpv renders with `alpha=yes` + `background=none`
+plus its `video-margin-ratio-{l,r,t,b}` so the surface outside the
+video rect is transparent and the webview shows through. This relies
+on a compositing window manager and a mpv VO that honours `alpha=yes`
+(default `gpu` VO does; older `xv` / `vaapi` fallbacks may not).
+
+Two limits today, both planned follow-ups:
+
+- The embed surface is the *top-level* Tauri window, so mpv's child
+  surface overlays the SvelteKit chrome during playback. A child
+  native widget below the webview is the next milestone.
+- Wayland sessions that report `wl_surface` handles aren't supported
+  by the current attach path. There's an
+  `Mpv::enable_standalone_window` fallback that flips
+  `force-window=yes` so video plays in a separate window from the
+  chrome.
 
 ## Why Rust
 

@@ -63,14 +63,19 @@ device on the LAN. To restrict it to localhost, set
 
 ## First-run setup
 
-Visit <code>http://localhost:8080</code>. You'll be walked through:
+Visit <code>http://localhost:8080</code>. A 3-step setup wizard walks you
+through bringing the server online:
 
-1. Creating the first administrator account.
-2. (Optional) Setting your TMDb API key, so scans enrich titles and posters.
-   Without one, scans still index files — they just won't have titles or
-   art beyond what's in the filename.
-3. Adding a library — point it at a directory of movies on disk. The scan
-   starts immediately.
+1. **Admin account.** Username + password, hashed with argon2id.
+2. **TMDb API key.** Optional — scans still index files without one,
+   they just won't have titles or art beyond what's in the filename.
+   You can drop the key in later from the admin settings page; the
+   live `TmdbHandle` swaps on save, so a new key takes effect on the
+   next scan without a restart.
+3. **First library.** Point it at a directory of movies or TV on disk;
+   the scan starts immediately. The wizard advances in-page via local
+   state, so the layout's "redirect to login once an admin exists"
+   rule doesn't fight the flow mid-setup.
 
 ## Watch something
 
@@ -79,11 +84,22 @@ browser can decode it, and falls back to an on-the-fly HLS transcode if it
 can't. Hardware acceleration is picked automatically at startup if it's
 available.
 
+## Want a native client?
+
+The repo also ships a Tauri 2 desktop app at `apps/mythos-desktop/`
+sharing the exact same SvelteKit UI as the embedded SPA, but switching
+playback to libmpv via IPC at runtime — HEVC, AV1, and HDR files play
+natively without the browser's codec constraints. See the
+[Download page](../../download/#native-desktop-client-early) for the
+build commands and current limitations. It's an early scaffold, not
+yet a polished install path.
+
 ## What's next
 
 - [Configuration](../configuration/) — the `mythos.toml` keys and `MYTHOS_*`
   env vars that actually exist.
 - [Library layout](../library-layout/) — how the scanner reads filenames
   today, and what's still scheduled.
-- [Architecture](../architecture/) — the workspace, the runtime, and the
-  shape of the streaming pipeline.
+- [Architecture](../architecture/) — the workspace, the runtime, the
+  shape of the streaming pipeline, and how the persistent mini-bar
+  player is wired up.

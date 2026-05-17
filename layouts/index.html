@@ -64,7 +64,7 @@
 <section id="features" class="container section">
   <header class="section-head">
     <p class="eyebrow">What works today</p>
-    <h2 class="section-title">Nine things Mythos already does.</h2>
+    <h2 class="section-title">Eleven things Mythos already does.</h2>
   </header>
   <ol class="features">
     <li class="feature">
@@ -112,6 +112,16 @@
       <h3 class="feature-title">Title search across the library.</h3>
       <p>A single search box queries movies and series together via <code>GET /api/search</code> — case-insensitive prefix match against the sort title. Results render inline with keyboard navigation (<kbd>↑</kbd>/<kbd>↓</kbd> to walk, <kbd>Enter</kbd> to open). Backed by SQLite <code>LIKE</code> today; will graduate to FTS5 once libraries get big enough to chug.</p>
     </li>
+    <li class="feature">
+      <span class="feature-num">10</span>
+      <h3 class="feature-title">Playback that survives navigation.</h3>
+      <p>The player is hoisted into the root layout and managed by a singleton session — start a movie, hit PiP, and the modal collapses into an 88&nbsp;px bar pinned to the bottom of the page. Browse anywhere; the same <code>&lt;video&gt;</code> / HLS session keeps playing. Click the small video to expand back to fullscreen; <kbd>Esc</kbd> minimizes instead of closing. The library page itself gets a Plex-style vertical alphabet rail that strips leading articles ("The Matrix" buckets under <em>M</em>).</p>
+    </li>
+    <li class="feature">
+      <span class="feature-num">11</span>
+      <h3 class="feature-title">Native desktop client (early).</h3>
+      <p>A Tauri&nbsp;2 desktop app at <code>apps/mythos-desktop/</code> sharing the exact SvelteKit codebase as the embedded server SPA — same routes, same components, same <code>Player.svelte</code>. Playback switches to <strong>libmpv via IPC</strong> at runtime (browser builds keep <code>&lt;video&gt;</code> + hls.js). The wire contract — <code>PlaybackRequest</code> / <code>PlaybackDecision</code> in <code>mythos_core::playback</code> — is the same one the future Jellyfin shim will speak.</p>
+    </li>
   </ol>
 </section>
 
@@ -131,7 +141,7 @@
     </article>
     <article class="cli-card cli-card-feature">
       <h3><code>phase 3</code></h3>
-      <p><strong>In progress.</strong> 3a — TV schema, scanner, TMDb enrichment, browse UI. 3c — episode playback sharing the movie streaming surface via a kind-aware <code>SessionKey</code>. 3d — continue-watching aggregated across movies + episodes, plus auto-play-next at episode end. Polish on top: title search across movies + series, sidecar <code>.srt</code> discovery, a <code>media-chrome</code>-based player, and per-file keyframe indexing for keyframe-aligned remux HLS. Music, photos, and books are the remaining sub-phases.</p>
+      <p><strong>In progress.</strong> 3a — TV schema, scanner, TMDb enrichment, browse UI. 3c — episode playback sharing the movie streaming surface via a kind-aware <code>SessionKey</code>. 3d — continue-watching aggregated across movies + episodes, plus auto-play-next at episode end. Polish on top: title search across movies + series, sidecar <code>.srt</code> discovery, a <code>media-chrome</code>-based player, per-file keyframe indexing for keyframe-aligned remux HLS, a 3-step setup wizard, a Plex-style alphabet jump bar on library browse, and a persistent mini-bar player hoisted into the root layout so playback survives navigation. Music, photos, and books are the remaining sub-phases.</p>
     </article>
     <article class="cli-card">
       <h3><code>phase 6</code></h3>
@@ -143,7 +153,7 @@
 <section id="install" class="container section">
   <header class="section-head">
     <p class="eyebrow">Get started</p>
-    <h2 class="section-title">Two install paths — a container, or the source.</h2>
+    <h2 class="section-title">A container, the source, or a native desktop client.</h2>
   </header>
   <div class="cli-grid">
     <article class="cli-card cli-card-feature">
@@ -176,6 +186,13 @@ ffmpeg / ffprobe</code></pre>
       <pre><code>listen     = "0.0.0.0:8080"
 data_dir   = "/var/lib/mythos"
 log_filter = "info,mythos=debug"</code></pre>
+    </article>
+    <article class="cli-card">
+      <h3><code>desktop</code></h3>
+      <p>Tauri&nbsp;2 + libmpv native client at <code>apps/mythos-desktop/</code>. Same SvelteKit UI as the embedded SPA; runtime switches to libmpv via IPC when launched in Tauri. Early scaffold — usable, with a couple of rough edges around embedding.</p>
+      <pre><code>cd apps/mythos-desktop
+pnpm install
+pnpm tauri dev</code></pre>
     </article>
   </div>
 </section>

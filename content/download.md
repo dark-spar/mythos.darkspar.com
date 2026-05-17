@@ -1,13 +1,13 @@
 ---
 title: "Download"
-description: "Mythos is in early development. Two install paths today: the published Docker image or build-from-source."
+description: "Mythos is in early development. Three install paths today: the published Docker image, build-from-source, or the native Tauri desktop client."
 layout: "download"
 ---
 
-Mythos has not cut a tagged release yet. Two install paths work today: pull the
-rolling Docker image published from `main`, or build from source. Tagged
-release binaries and platform packages will land when the project hits a real
-`v0.1.0`.
+Mythos has not cut a tagged release yet. Three install paths work today: pull
+the rolling Docker image published from `main`, build from source, or run the
+native Tauri desktop client (early). Tagged release binaries and platform
+packages will land when the project hits a real `v0.1.0`.
 
 ## Docker (recommended)
 
@@ -77,9 +77,40 @@ in `web/` so the SPA is compiled and embedded in the same `cargo` invocation.
 Set `MYTHOS_SKIP_WEB_BUILD=1` if you only want to rebuild the Rust side.
 
 Then open <code>http://localhost:8080</code> (or `http://<lan-ip>:8080` from
-another device — the default `listen` is `0.0.0.0:8080`). First-run setup
-walks through
-creating an admin account and adding a library.
+another device — the default `listen` is `0.0.0.0:8080`). A 3-step setup
+wizard walks through creating an admin account, dropping in your TMDb key
+(optional — scans still index files without one), and adding the first
+library.
+
+## Native desktop client (early)
+
+A Tauri 2 app at `apps/mythos-desktop/` shares the exact same SvelteKit
+codebase as the embedded server SPA. It points at a running Mythos server
+the same way the browser UI would, but switches the player to **libmpv via
+IPC** at runtime — so HEVC, AV1, and HDR files play natively without the
+browser's codec gauntlet, and HDR→SDR tonemapping happens in mpv's render
+chain rather than ffmpeg.
+
+```sh
+git clone https://gitlab.com/darkspar/mythos
+cd mythos/apps/mythos-desktop
+pnpm install
+pnpm tauri dev
+```
+
+It's a scaffold — usable, but rough. Two known limits today:
+
+- The mpv embed surface is currently the top-level Tauri window, so the
+  video can overlay the SvelteKit chrome during playback. A child native
+  widget below the webview is the next milestone.
+- Wayland sessions that report `wl_surface` handles aren't supported by
+  the current attach path; there's a `force-window=yes` fallback that
+  plays in a separate window.
+
+Dev builds dynamically link against system libmpv via pkg-config; release
+bundles ship `libs/<platform>/libmpv.*`. See
+`apps/mythos-desktop/README.md` in the source tree for the platform
+prerequisite list.
 
 ## Hardware acceleration
 
@@ -97,9 +128,14 @@ What works today: movies and TV — scan, browse, direct-play, HLS transcoding
 with hardware acceleration (NVENC stays on the GPU end-to-end), multi-rendition
 ABR, HDR→SDR tonemapping with a configurable filter pipeline (now including
 `tonemapx`, jellyfin-ffmpeg's SIMD CPU kernel), subtitle burn-in and WebVTT
-sidecars, sidecar `.srt` discovery, TMDb metadata enrichment with
-backdrops, title search across movies + series, continue-watching across
-movies and episodes, auto-play-next, and a `media-chrome`-based player.
+sidecars, sidecar `.srt` discovery, TMDb metadata enrichment with backdrops
+and a year-in-title rescue (Blade Runner 2049 / Cyberpunk 2077 now resolve
+correctly), title search across movies + series, continue-watching across
+movies and episodes, auto-play-next, a `media-chrome`-based player that
+collapses into a persistent mini-bar so playback survives navigation, a
+3-step setup wizard, a Plex-style vertical alphabet jump bar on library
+browse, and a native Tauri/libmpv desktop client sharing the same UI as
+the browser SPA.
 
 What's next: the remaining Phase 3 media types — music, photos, books —
 and a Jellyfin-API compatibility shim (Phase 6) for existing clients like
